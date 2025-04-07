@@ -10,7 +10,7 @@ association_table = Table(
     "association_table",
     Base.metadata,
     Column("post_id", ForeignKey("posts.id")),
-    Column("channel_id", ForeignKey("channels.id")),
+    Column("channel_id", ForeignKey("posts_channels.id")),
 )
 
 engine = create_engine("sqlite:///database.db", echo=False)
@@ -26,4 +26,6 @@ def create_all():
 from .Channel import Channel
 from .MediaFile import MediaFile
 from .Post import Post
+from .PostKeyboard import PostKeyboard
+from .PostSchedule import PostSchedule
 from .User import User

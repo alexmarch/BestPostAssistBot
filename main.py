@@ -7,10 +7,12 @@ from aiogram.types import BotCommand
 from bot import bot, dp
 from models import create_all
 from routes import base_router, post_router, user_router
+from utils.scheduler import scheduler
 
 
 async def main() -> None:
     create_all()
+    scheduler.start()
     await bot.set_my_commands(
         commands=[
             BotCommand(command="/start", description="Запутить или перезапустить бота"),

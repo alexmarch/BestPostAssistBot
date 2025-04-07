@@ -86,6 +86,30 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
     return rkb.as_markup()
 
 
+def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
+    """Возвращает маркап клавиатуры для подтверждения поста"""
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text="✅⚡️ Подтвердить",
+                callback_data=PostButtonData(
+                    action="confirm_create_post", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="‹ Назад к посту",
+                callback_data=PostButtonData(
+                    action="back", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
 def get_add_media_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarkup:
     """
     Возвращает маркап клавиатуры для добавления медиа (🔼 Вверх с превью | 🆙 Вверх без превью | 🔽 Вниз с превью)
@@ -95,23 +119,23 @@ def get_add_media_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarkup:
             InlineKeyboardButton(
                 text="🔼 Вверх с превью",
                 callback_data=PostMediaPositionData(
-                    action="add_media", media_position="up_preview"
+                    action="add_media", media_position="top_preview"
                 ).pack(),
             )
         ],
-        [
-            InlineKeyboardButton(
-                text="🆙 Вверх без превью",
-                callback_data=PostMediaPositionData(
-                    action="add_media", media_position="up_no_preview"
-                ).pack(),
-            ),
-        ],
+        # [
+        #     InlineKeyboardButton(
+        #         text="🆙 Вверх без превью",
+        #         callback_data=PostMediaPositionData(
+        #             action="add_media", media_position="top_no_preview"
+        #         ).pack(),
+        #     ),
+        # ],
         [
             InlineKeyboardButton(
                 text="🔽 Вниз с превью",
                 callback_data=PostMediaPositionData(
-                    action="add_media", media_position="down_preview"
+                    action="add_media", media_position="bottom_preview"
                 ).pack(),
             ),
         ],
@@ -147,6 +171,7 @@ def get_back_to_post_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarku
 
 def get_post_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     """Возвращает маркап клавиатуры для настроек поста"""
+    pass
 
 
 def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
@@ -194,15 +219,23 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
             InlineKeyboardButton(
                 text="🚀 Опубликовать",
                 callback_data=PostButtonData(
-                    action="show_publish_post", type="post_settings_action"
+                    action="publish_post", type="post_settings_action"
                 ).pack(),
             ),  # ✔️ Подтвердите отправку поста с кнопкой подтвердить
         ],
         [
             InlineKeyboardButton(
-                text="Рекламный топ",
+                text="🤖 Интеграция с ИИ",
                 callback_data=PostButtonData(
-                    action="show_adv_top", type="post_settings_action"
+                    action="ai_integration", type="post_settings_action"
+                ).pack(),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="📊 Интеграция с CRM",
+                callback_data=PostButtonData(
+                    action="crm_integration", type="post_settings_action"
                 ).pack(),
             ),
         ],
@@ -222,7 +255,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
 def get_channel_list_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     """Возвращает маркап клавиатуры для списка каналов"""
 
-    channel_list = data["chat_channel_list"]
+    channel_list = data.get("chat_channel_list", [])
     channel_buttons = []
 
     action_buttons = [
@@ -274,8 +307,17 @@ def get_channel_list_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
 
 def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardBuilder()
-
     for btn in post_inline_buttons:
+        if data.get("media_file_name") and btn["action"] == "add_media":
+            btn["text"] = "🗑️ Удалить медиа"
+            btn["action"] = "remove_media"
+        elif btn["action"] == "remove_media" and not data.get("media_file_name"):
+            btn["text"] = "📎 Добавить медиа"
+            btn["action"] = "add_media"
+
+        # if btn["action"] == "add_chat_channel":
+        #     btn["text"] = f"{btn["text"]} ({len(data.get('chat_channel_list', []))})"
+
         if btn["action"] == "sound":
             btn_text = f'{CheckState[data["sound"]]} {btn['text']}'
         elif btn["action"] == "comments":
@@ -290,7 +332,6 @@ def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
             text=btn_text,
             callback_data=PostButtonData(action=btn["action"], type=btn["type"]),
         )
-
     ikb.adjust(2)
     return ikb.as_markup()
 

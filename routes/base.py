@@ -4,7 +4,7 @@ from aiogram.types import Message
 from aiogram.utils.formatting import BlockQuote, Underline, as_list, as_marked_section
 
 from keyboard.keyboard import get_main_keyboard
-from repositories import user_repo
+from repositories import user_repository
 
 from . import base_router
 
@@ -29,9 +29,14 @@ async def start_handler(message: Message) -> None:
         reply_markup=get_main_keyboard(),
     )
 
-    user = user_repo.find_by_chat_id(message.from_user.id)
+    user = user_repository.find_by_chat_id(message.from_user.id)
     if not user:
-        user_repo.create(
+        # send dice message
+        await message.answer_dice(
+            emoji="🎲",
+            reply_markup=get_main_keyboard(),
+        )
+        user_repository.create(
             message.from_user.id,
             message.from_user.username,
             message.from_user.full_name,

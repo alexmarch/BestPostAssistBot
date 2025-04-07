@@ -3,7 +3,7 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware, Router
 from aiogram.types import TelegramObject
 
-from repositories import user_repo
+from repositories import user_repository
 
 
 class UserMiddleware(BaseMiddleware):
@@ -17,7 +17,7 @@ class UserMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         event_user = data["event_from_user"]
-        user = user_repo.find_by_chat_id(event_user.id)
+        user = user_repository.find_by_chat_id(event_user.id)
         data["user_id"] = user.id
         return await handler(event, data)
 
@@ -31,4 +31,4 @@ post_router.include_router(media_router)
 
 post_router.message.outer_middleware(UserMiddleware())
 
-from . import base, media, post, user
+from . import base, media, post, profile
