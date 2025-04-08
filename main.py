@@ -3,6 +3,9 @@ import logging
 import sys
 
 from aiogram.types import BotCommand
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from bot import bot, dp
 from models import create_all
