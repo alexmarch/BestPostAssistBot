@@ -31,13 +31,11 @@ async def start_handler(message: Message) -> None:
 
     user = user_repository.find_by_chat_id(message.from_user.id)
     if not user:
-        # send dice message
-        await message.answer_dice(
-            emoji="🎲",
-            reply_markup=get_main_keyboard(),
-        )
+        # todo: get timezone from url parameter
+        timezone = "UTC"
         user_repository.create(
             message.from_user.id,
             message.from_user.username,
             message.from_user.full_name,
+            timezone,
         )

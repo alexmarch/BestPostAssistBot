@@ -2,26 +2,38 @@ from typing import Any
 
 from aiogram import F, html
 from aiogram.filters import Command
+from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_calendar import (
+  DialogCalendar,
+  DialogCalendarCallback,
+  SimpleCalendar,
+  SimpleCalendarCallback,
+  get_user_locale,
+)
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-    ChannelData,
-    PostButtonData,
-    get_add_media_keyboard,
-    get_back_to_post_keyboard,
-    get_channel_list_keyboard,
-    get_chat_channel_keyboard,
-    get_confirm_post_keyboard,
-    get_post_publish_settings_keyboard,
-    get_settings_post_keyboard,
+  ChannelData,
+  PostButtonData,
+  get_add_media_keyboard,
+  get_back_to_post_keyboard,
+  get_channel_list_keyboard,
+  get_chat_channel_keyboard,
+  get_confirm_calendar_keyboard,
+  get_confirm_post_keyboard,
+  get_post_publish_settings_keyboard,
+  get_reaction_buttons_keyboard,
+  get_settings_post_keyboard,
 )
 from models import User
 from repositories import post_repository, user_repository
 from states.post import PostForm
 from utils.media import remove_media_file
+from utils.scheduler import create_jod
 
 from . import post_router
 
@@ -45,15 +57,25 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
     """
     Отправляет ответ с постом и клавиатурой настроек
     """
+    ikb = InlineKeyboardBuilder()
     text = state_data.get("text")
     media_file_position = state_data.get("media_file_position")
     media_file_path = state_data.get("media_file_path")
     media_file_name = state_data.get("media_file_name")
     media_file_type = state_data.get("media_file_type")
+    reactions = state_data.get("reactions")
 
     await clear_message_ids(message)  # Clear previous messages
 
     # Remove last message
+    if reactions:
+        ikb.attach(
+            InlineKeyboardBuilder.from_markup(get_reaction_buttons_keyboard(state_data))
+        )
+
+    ikb.attach(
+        InlineKeyboardBuilder.from_markup(get_settings_post_keyboard(state_data))
+    )
 
     if media_file_type == "photo":
         photo = FSInputFile(path=media_file_path, filename=media_file_name)
@@ -61,13 +83,13 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
             await message.answer_photo(
                 photo=photo,
                 caption=text,
-                reply_markup=get_settings_post_keyboard(state_data),
+                reply_markup=ikb.as_markup(),
             )
         elif media_file_position == "bottom_preview":
             msg1 = await message.answer(text)
             msg2 = await message.answer_photo(
                 photo=photo,
-                reply_markup=get_settings_post_keyboard(state_data),
+                reply_markup=ikb.as_markup(),
             )
             message_ids_list.append(msg1.message_id)
             message_ids_list.append(msg2.message_id)
@@ -78,19 +100,17 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
             await message.answer_video(
                 video=video,
                 caption=text,
-                reply_markup=get_settings_post_keyboard(state_data),
+                reply_markup=ikb.as_markup(),
             )
         elif media_file_position == "bottom_preview":
             msg1 = await message.answer(text)
-            msg2 = await message.answer_video(
-                video, reply_markup=get_settings_post_keyboard(state_data)
-            )
+            msg2 = await message.answer_video(video, reply_markup=ikb.as_markup())
             message_ids_list.append(msg1.message_id)
             message_ids_list.append(msg2.message_id)
     else:
         await message.answer(
             text,
-            reply_markup=get_settings_post_keyboard(state_data),
+            reply_markup=ikb.as_markup(),
         )
 
 
@@ -117,18 +137,37 @@ async def create_post_handler(message: Message, state: FSMContext) -> None:
     """
     Обработчик создания поста
     """
+    await state.clear()
     await state.set_state(PostForm.text)
     msg1 = await message.answer("⬇️ Создайте или перешлите нужный вам пост")
     message_ids_list.append(msg1.message_id)
 
 
-@post_router.message(PostForm.text)
+@post_router.message(
+    PostForm.text,
+    lambda msg: msg.text.lower()
+    not in [
+        "настройки",
+        "добавить канал/чат",
+        "мой профиль",
+        "шаблоны",
+        "контент-план",
+        "изменить пост",
+    ],
+)
 async def create_post_text_handler(message: Message, state: FSMContext) -> None:
     """
     Обработчик добавленя текста поста
     """
     user = user_repository.find_by_chat_id(message.from_user.id)
     channels = user_repository.get_all_user_channels(user)
+    multiposting = user_repository.get_multiposting_by_user_id(user.id)
+    time_frames = None
+    time_frames_active = "on"
+    if multiposting:
+        time_frames = multiposting.time_frames.split("|")
+        time_frames_active = "on" if multiposting.active else "off"
+
     chat_channel = [
         {
             "id": channel.id,
@@ -156,6 +195,8 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
         media_file_name=None,
         media_file_position=None,
         media_file_type=None,
+        time_frames=time_frames,
+        time_frames_active=time_frames_active,
     )
 
     await state.set_state(PostForm.chat_channel_list)
@@ -170,6 +211,39 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
 # async def create_post_chat_channel_list_handler(message: Message, state: FSMContext) -> None:
 #     # reply_markup = get_chat_channel_keyboard(channels)
 #     await message.answer("🏷 Выберите каналы/чаты для публикации")
+
+
+@post_router.message(PostForm.recipient_report_chat_id)
+async def create_post_recipient_report_chat_id_handler(
+    message: Message, state: FSMContext
+) -> None:
+    """
+    Обработчик добавления ID чата для отчета
+    """
+    state_data = await state.get_data()
+
+    if message.text.isdigit():
+        user = user_repository.find_by_chat_id(message.text)
+    else:
+        user = user_repository.find_by_username(message.text)
+
+    if not user:
+        await message.answer(
+            text="⚠️ Пользователь не найден. Введите корректный ID/юзернейм клиента",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        return
+
+    await state.update_data(
+        {
+            "recipient_report_chat_id": user.chat_id,
+        }
+    )
+
+    await message.answer(
+        text="✅ Клиент успешно добавлен",
+        reply_markup=get_back_to_post_keyboard(state_data),
+    )
 
 
 @post_router.callback_query(ChannelData.filter(F.action == "check"))
@@ -203,6 +277,62 @@ async def channel_check_action_handler(
     )
 
 
+# dialog calendar usage
+@post_router.callback_query(DialogCalendarCallback.filter())
+async def process_dialog_calendar(
+    callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
+):
+    state_data = await state.get_data()
+    selected, date = await DialogCalendar(
+        locale=await get_user_locale(callback_query.from_user)
+    ).process_selection(callback_query, callback_data)
+    if selected:
+        await callback_query.message.answer(
+            f'You selected {date.strftime("%d/%m/%Y")}',
+            reply_markup=get_confirm_calendar_keyboard(state_data),
+        )
+
+
+@post_router.callback_query(SimpleCalendarCallback.filter())
+async def process_simple_calendar(
+    callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
+):
+    state_data = await state.get_data()
+    simplecalendar = SimpleCalendar(
+        locale=await get_user_locale(callback_query.from_user)
+    )
+
+    # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
+    selected, date = await simplecalendar.process_selection(
+        callback_query, callback_data
+    )
+
+    if selected:
+        await state.update_data(
+            {
+                "date_frames": date.strftime("%d/%m/%Y"),
+            }
+        )
+        state_data = await state.get_data()
+        builder = InlineKeyboardBuilder()
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(
+                await simplecalendar.start_calendar(
+                    year=date.year,
+                    month=date.month,
+                )
+            )
+        )
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(get_confirm_calendar_keyboard(state_data))
+        )
+        await callback_query.message.edit_text(
+            f'<b>Дата:</b>\n {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}',
+            inline_message_id=callback_query.inline_message_id,
+            reply_markup=builder.as_markup(),
+        )
+
+
 @post_router.callback_query(PostButtonData.filter(F.type == "post_settings_action"))
 async def set_post_settings_action_handler(
     query: CallbackQuery, state: FSMContext, callback_data: PostButtonData
@@ -210,6 +340,10 @@ async def set_post_settings_action_handler(
     """
     Обработчик действий с постами
     """
+    user = user_repository.find_by_chat_id(query.from_user.id)
+    state_data = await state.get_data()
+    simplecalendar = SimpleCalendar(locale="uk_UA")
+
     if callback_data.action == "publish_post":
         await clear_message_ids(query.message)
         # оправить сообщение на подтверждение
@@ -229,25 +363,71 @@ async def set_post_settings_action_handler(
             text="🌟 Доступно только в платной подписке!", show_alert=True
         )
 
+    if callback_data.action == "show_send_report":
+        info_message = BlockQuote(
+            "ℹ️ Чтобы отчёт был доставлен, ваш клиент должен запустить бота."
+        )
+        message = f"""⬆️ <b>Отчёт клиенту</b>\n\n
+Отправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n
+{info_message.as_html()}\n\n
+"""
+        await query.message.edit_text(
+            text=message,
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+
+        await state.set_state(PostForm.recipient_report_chat_id)
+
     # Подтверждение создания поста
     if callback_data.action == "confirm_create_post":
         state_data = await state.get_data()
-        user = user_repository.find_by_chat_id(query.from_user.id)
-
         post = post_repository.create_post(user, state_data)
+
         if post:
             await clear_message_ids(query.message)
             await query.answer(text="✅ Пост успешно опубликован!", show_alert=True)
-            await state.clear()
-            result = await post_repository.send_post(post.id)
-            if result:
-                channels = ""
-                for channel in result["channels"]:
-                    channels += f"{html.blockquote(html.code(channel.title)) (channel['type'])}\n"
+            time_frames = state_data.get("time_frames")
+            time_frames_active = state_data.get("time_frames_active")
+            date_frames_confirm = state_data.get("date_frames_confirm")
+            if not time_frames or time_frames_active == "off":
+                result = await post_repository.send_post(post.id)
+                if result:
+                    channels = ""
+                    for channel in result["channels"]:
+                        channels += f"{html.blockquote(html.code(channel.title + '/' + channel.type))}\n"
+                    await query.message.answer(
+                        text=f"✅ <b>Отправка завершена.</b>\n\n📨 Доставлено {result['sended_channels']}/{result['total_channels']}:\n\n{channels}\n\n",
+                        reply_markup=get_back_to_post_keyboard(state_data),
+                    )
+            else:
+                # create job schedule with time_frames for sending post
+                create_jod(post, time_frames)
+
+                multiposting = BlockQuote("\n".join(time_frames)).as_html()
+
+                if date_frames_confirm:
+                    multiposting = f"📅 Дата публикации:\n {BlockQuote(date_frames_confirm).as_html()}\n {multiposting}\n"
+
                 await query.message.answer(
-                    text=f"✅ Отправка завершена!\n\n📨 Доставлено {result['sended_channels']}/{result['total_channels']}:\n\n{channels}\n\n",
+                    text=f"✅ <b>Публикация завершена.</b>\n\n {multiposting}\n\n Вы получите уведомление о публикации поста.\n\n",
                     reply_markup=get_back_to_post_keyboard(state_data),
                 )
+
+    if callback_data.action == "active_multiposting_timeframe":
+        multiposting = user_repository.get_multiposting_by_user_id(user.id)
+        if multiposting:
+            active_state = "off" if multiposting.active else "on"
+            user_repository.update_multiposting_active_timeframe(
+                user,
+                active_state,
+            )
+            await state.update_data(time_frames_active=active_state)
+            state_data = await state.get_data()
+            await query.message.edit_reply_markup(
+                inline_message_id=query.inline_message_id,
+                reply_markup=get_confirm_post_keyboard(state_data),
+            )
 
     if callback_data.action == "add_media":
         state_data = await state.get_data()
@@ -352,6 +532,55 @@ async def set_post_settings_action_handler(
             state_data=state_data,
         )
 
+    if callback_data.action == "show_next_post_date_calendar":
+        builder = InlineKeyboardBuilder()
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(await simplecalendar.start_calendar())
+        )
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
+        )
+        await query.message.edit_text(
+            text="📅 Выберите дату в календаре для отложенного поста\n\n",
+            inline_message_id=query.inline_message_id,
+            reply_markup=builder.as_markup(),
+        )
+
+    if callback_data.action == "date_frames_confirm":
+        state_data = await state.get_data()
+        date_frames = state_data.get("date_frames")
+        if date_frames:
+            await state.update_data(
+                {
+                    "date_frames_confirm": date_frames,
+                }
+            )
+            await query.message.edit_text(
+                text=f"📅 Дата публикации: {BlockQuote(date_frames).as_html()}",
+                inline_message_id=query.inline_message_id,
+                reply_markup=get_post_publish_settings_keyboard(state_data),
+            )
+        else:
+            await query.answer(text="⚠️ Выберите дату публикации!", show_alert=True)
+
+    if callback_data.action == "add_buttons":
+        state_data = await state.get_data()
+        await clear_message_ids(query.message)
+        await query.message.answer(
+            text=f"⬇️ Отправьте кнопки в формате:\n\n{ BlockQuote("Название - Ссылка").as_html()} {BlockQuote ('Название - Ссылка|Название - Ссылка').as_html()} Результат: 2 кнопки в столбик\n\n",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        await state.set_state(PostForm.buttons)
+
+    if callback_data.action == "add_reactions":
+        state_data = await state.get_data()
+        await clear_message_ids(query.message)
+        await query.message.answer(
+            text="⬇️ Отправьте реакции в формате:\n\n❤️/👍/😁/🤔/🤬\nДа/Нет/Не знаю",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        await state.set_state(PostForm.reactions)
+
 
 @post_router.callback_query(PostButtonData.filter(F.type == "post_settings"))
 async def set_post_settings_handler(
@@ -386,7 +615,6 @@ async def handle_request_chat(message: Message) -> None:
     """
     chat_info = message.chat_shared
     user = user_repository.find_by_chat_id(message.from_user.id)
-    print(chat_info)
     if user and chat_info:
         if chat_info.request_id == 1 or chat_info.request_id == 2:
             type = "chat"
@@ -404,6 +632,85 @@ async def handle_request_chat(message: Message) -> None:
             await message.answer(
                 f"Вы выбрали канал:\n\n{html.blockquote(chat_info.title)}"
             )
+
+
+@post_router.message(PostForm.reactions)
+async def create_post_reactions_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик добавления реакций
+    """
+    state_data = await state.get_data()
+
+    try:
+        lines = message.text.split("\n")
+        parsed_reactions = []
+        for line in lines:
+            _reactions = line.split("/")
+            for reaction in _reactions:
+                parsed_reactions.append(reaction.strip())
+
+        await state.update_data(reactions=parsed_reactions)
+        state_data = await state.get_data()
+        await answer_with_post(
+            message=message,
+            state_data=state_data,
+        )
+    except Exception as e:
+        await message.answer(
+            text="⚠️ Ошибка при добавлении реакций. Попробуйте еще раз.",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        print(e)
+
+
+@post_router.message(PostForm.buttons)
+async def create_post_buttons_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик добавления кнопок
+    """
+    state_data = await state.get_data()
+
+    try:
+        lines = message.text.split("\n")
+        row = 0
+        column = 0
+        for line in lines:
+            _buttons = line.split("|")
+            parsed_buttons = []
+
+            if not len(_buttons):
+                # try parse single button
+                _buttons = message.text.split("-")
+                if len(_buttons) == 2:
+                    name = _buttons[0].strip()
+                    url = _buttons[1].strip()
+                    parsed_buttons.append(
+                        {"name": name, "url": url, "row": row, "column": column}
+                    )
+
+            for button in _buttons:
+                parts = button.split("-")
+                if len(parts) == 2:
+                    name = parts[0].strip()
+                    url = parts[1].strip()
+                    parsed_buttons.append(
+                        {"name": name, "url": url, "row": row, "column": column}
+                    )
+            row += 1
+
+        await state.update_data(buttons=parsed_buttons)
+        state_data = await state.get_data()
+        reply_markup = get_post_publish_settings_keyboard(state_data)
+        await message.answer(
+            text="✅ Кнопки успешно добавлены",
+            reply_markup=reply_markup,
+        )
+    except Exception as e:
+        await message.answer(
+            text="⚠️ Ошибка при добавлении кнопок. Попробуйте еще раз.",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        print(e)
 
 
 # @base_router.chat_member()

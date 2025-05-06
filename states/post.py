@@ -8,8 +8,11 @@ class PostForm(StatesGroup):
     media_file_path = State()
     media_file_name = State()
     media_file_type = State()
+    recipient_report_chat_id = State()
     time_frames = State()
+    time_frames_active = "on"
     date_frames = State()
+    date_frames_confirm = State()
     buttons = State()
     reactions = State()
     sound = State()

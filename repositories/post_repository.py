@@ -1,10 +1,11 @@
 from typing import Any
 
+from aiogram import html
 from aiogram.types import FSInputFile
 from sqlalchemy import select
 
 from bot import bot
-from models import Channel, MediaFile, Post, User
+from models import Channel, MediaFile, Post, PostSchedule, User
 
 from .base import BaseRepository
 
@@ -18,7 +19,9 @@ class PostRepository(BaseRepository):
         """
         return self.session.execute(select(Post).where(Post.id == post_id)).scalar()
 
-    async def send_post(self, post_id: int) -> None:
+    async def send_post(
+        self, post_id: int, send_report_to_owner: bool = False
+    ) -> dict[str, Any]:
         """
         Отправляет пост в указанный канал.
         :param post: Пост, который нужно отправить.
@@ -55,82 +58,113 @@ class PostRepository(BaseRepository):
 
             for channel in post.channels:
                 print(f"Sending post to channel {channel.chat_id}")
+                try:
+                    if media_file_type == "photo":
+                        photo = FSInputFile(
+                            path=media_file_path, filename=media_file_name
+                        )
+                        message = await bot.send_photo(
+                            chat_id=channel.chat_id,
+                            photo=photo,
+                            caption=text,
+                            disable_notification=not post.sound,
+                            # protect_content=not post.comments,
+                            show_caption_above_media=(
+                                True
+                                if media_file_position == "bottom_preview"
+                                else False
+                            ),
+                        )
 
-                if media_file_type == "photo":
-                    photo = FSInputFile(path=media_file_path, filename=media_file_name)
-                    message = await bot.send_photo(
-                        chat_id=channel.chat_id,
-                        photo=photo,
-                        caption=text,
-                        disable_notification=not post.sound,
-                        # protect_content=not post.comments,
-                        show_caption_above_media=(
-                            True if media_file_position == "bottom_preview" else False
-                        ),
-                    )
+                    elif media_file_type == "video":
+                        video = FSInputFile(
+                            path=media_file_path, filename=media_file_name
+                        )
+                        message = await bot.send_video(
+                            chat_id=channel.chat_id,
+                            video=video,
+                            caption=text,
+                            disable_notification=not post.sound,
+                            # protect_content=not post.comments,
+                            show_caption_above_media=(
+                                True
+                                if media_file_position == "bottom_preview"
+                                else False
+                            ),
+                        )
 
-                elif media_file_type == "video":
-                    video = FSInputFile(path=media_file_path, filename=media_file_name)
-                    message = await bot.send_video(
-                        chat_id=channel.chat_id,
-                        video=video,
-                        caption=text,
-                        disable_notification=not post.sound,
-                        # protect_content=not post.comments,
-                        show_caption_above_media=(
-                            True if media_file_position == "bottom_preview" else False
-                        ),
-                    )
+                    else:
+                        message = await bot.send_message(
+                            chat_id=channel.chat_id,
+                            text=text,
+                        )
 
-                else:
-                    message = await bot.send_message(
-                        chat_id=channel.chat_id,
-                        text=text,
-                    )
+                    if post.pin:
+                        print(
+                            f"Pinning message {message.message_id} in channel {channel.chat_id}"
+                        )
+                        await bot.pin_chat_message(
+                            chat_id=channel.chat_id,
+                            message_id=message.message_id,
+                            disable_notification=not post.sound,
+                        )
 
-                if post.pin:
-                    print(
-                        f"Pinning message {message.message_id} in channel {channel.chat_id}"
-                    )
-                    await bot.pin_chat_message(
-                        chat_id=channel.chat_id,
-                        message_id=message.message_id,
-                        disable_notification=not post.sound,
-                    )
+                    if message and channel:
+                        sended_channels += 1
+                        channels.append(channel)
 
-                if message:
-                    sended_channels += 1
-                    channels.append(channel.dict())
+                    if not post.comments:
+                        # get all user ids from channel
+                        channel_members = await bot.get_chat_member_count(
+                            chat_id=channel.chat_id
+                        )
+                        # for member in channel_members:
+                        await bot.restrict_chat_member(
+                            chat_id=channel.chat_id,
+                            user_id=post.user.chat_id,
+                            permissions={
+                                "can_send_messages": False,
+                                "can_send_media_messages": False,
+                                "can_send_polls": False,
+                                "can_add_web_page_previews": False,
+                                "can_change_info": False,
+                                "can_invite_users": False,
+                                "can_pin_messages": False,
+                            },
+                        )
 
-                if not post.comments:
-                    # get all user ids from channel
-                    channel_members = await bot.get_chat_member_count(
-                        chat_id=channel.chat_id
-                    )
-                    # for member in channel_members:
-                    await bot.restrict_chat_member(
-                        chat_id=channel.chat_id,
-                        user_id=post.user.chat_id,
-                        permissions={
-                            "can_send_messages": False,
-                            "can_send_media_messages": False,
-                            "can_send_polls": False,
-                            "can_add_web_page_previews": False,
-                            "can_change_info": False,
-                            "can_invite_users": False,
-                            "can_pin_messages": False,
-                        },
-                    )
-                if post.signature:
-                    await bot.send_message(
-                        chat_id=channel.chat_id,
-                        text=f"Post by @{post.user.username}",
-                    )
+                    if post.signature:
+                        print("Try send post")
+                        await bot.send_message(
+                            chat_id=channel.chat_id,
+                            text=f"Post by @{post.user.username}",
+                        )
 
+                except Exception as e:
+                    print(f"Error sending post to channel {channel.chat_id}: {e}")
+                    continue
         except Exception as e:
             print(f"Error sending post: {e}")
 
         finally:
+            channels = ""
+            for channel in channels:
+                channels += f"{html.blockquote(html.code(channel.title + '/' + channel.type))}\n"
+
+            if post.recipient_report_chat_id:
+                try:
+                    await bot.send_message(
+                        chat_id=post.recipient_report_chat_id,
+                        text=f"✅ Отправка завершена!\n\n📨 Доставлено {sended_channels}/{total_channels}:\n\n",
+                    )
+                except Exception as e:
+                    print(f"Error sending report to user: {e}")
+
+            if send_report_to_owner:
+                await bot.send_message(
+                    chat_id=post.user.chat_id,
+                    text=f"✅ Отправка завершена!\n\n📨 Доставлено {sended_channels}/{total_channels}:\n\n{channels}\n\n",
+                )
             return {
                 "sended_channels": sended_channels,
                 "total_channels": total_channels,
@@ -148,6 +182,8 @@ class PostRepository(BaseRepository):
         """
         try:
             chat_channel_list = post_form.get("chat_channel_list")
+            date_frames_confirm = post_form.get("date_frames_confirm", None)
+
             post = Post(
                 user_id=user.id,
                 text=post_form.get("text"),
@@ -155,8 +191,19 @@ class PostRepository(BaseRepository):
                 comments=True if post_form.get("comments") == "on" else False,
                 pin=True if post_form.get("pin") == "on" else False,
                 signature=True if post_form.get("signature") == "on" else False,
+                recipient_report_chat_id=post_form.get("recipient_report_chat_id"),
             )
+
             self.session.add(post)
+
+            if date_frames_confirm:
+                post_schedule = PostSchedule(
+                    schedule_date_frames=post_form.get("date_frames"),
+                    is_active=True,
+                    post=post,
+                )
+                self.session.add(post_schedule)
+
             if chat_channel_list:
                 for chat_channel in chat_channel_list:
                     channel = self.session.execute(
@@ -199,6 +246,7 @@ class PostRepository(BaseRepository):
             post.comments = True if post_form.get("comments") == "on" else False
             post.pin = True if post_form.get("pin") == "on" else False
             post.signature = True if post_form.get("signature") == "on" else False
+            post.recipient_report_chat_id = post_form.get("recipient_report_chat_id")
 
             chat_channel_list = post_form.get("chat_channel_list")
             if chat_channel_list:

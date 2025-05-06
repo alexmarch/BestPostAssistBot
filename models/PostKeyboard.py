@@ -9,3 +9,5 @@ class PostKeyboard(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     post: Mapped["Post"] = relationship(back_populates="post_keyboard")
+    button_text: Mapped[str] = mapped_column(String(255), nullable=False)
+    button_url: Mapped[str] = mapped_column(String(255), nullable=False)

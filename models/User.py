@@ -14,5 +14,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255))
     posts: Mapped[List["Post"]] = relationship(back_populates="user")
     channels: Mapped[List["Channel"]] = relationship(back_populates="user")
+    multipostings: Mapped[List["Multiposting"]] = relationship(back_populates="user")
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_banned: Mapped[bool] = mapped_column(default=False)
+    timezone: Mapped[str] = mapped_column(default="UTC")
