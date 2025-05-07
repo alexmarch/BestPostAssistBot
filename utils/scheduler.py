@@ -13,7 +13,7 @@ from repositories.post_repository import PostRepository
 post_repository = PostRepository(get_session())
 
 jobstores = {
-    "default": SQLAlchemyJobStore(url="sqlite:///jobs.db"),
+    "default": SQLAlchemyJobStore(url="sqlite:///database.db"),
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)

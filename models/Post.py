@@ -16,8 +16,8 @@ class Post(Base):
         secondary=association_table, back_populates="posts"
     )
     post_media_file: Mapped["MediaFile"] = relationship(back_populates="post")
-    post_keyboard: Mapped["PostKeyboard"] = relationship(back_populates="post")
-    post_reaction_buttons: Mapped[List["PostReactionButton"]] = relationship(
+    post_keyboards: Mapped[List["PostKeyboard"]] = relationship(back_populates="post")
+    post_reaction_buttons: Mapped[List["PostReactioButton"]] = relationship(
         back_populates="post"
     )
     post_schedule: Mapped["PostSchedule"] = relationship(back_populates="post")

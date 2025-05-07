@@ -3,10 +3,10 @@ from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-  InlineKeyboardButton,
-  InlineKeyboardMarkup,
-  KeyboardButtonRequestChat,
-  ReplyKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButtonRequestChat,
+    ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
@@ -65,6 +65,8 @@ post_inline_buttons = [
 class EmojiButtonData(CallbackData, prefix="emoji"):
     action: str
     post_id: int
+    id: int | None = None
+    text: str | None = None
     type: str = "emoji_action"
 
 
@@ -109,10 +111,45 @@ def get_reaction_buttons_keyboard(state_data: dict[str, Any]) -> InlineKeyboardM
             callback_data=EmojiButtonData(
                 action="add_reaction",
                 post_id=-1,
+                id=-1,
+                text=reaction,
                 type="emoji_action",
             ).pack(),
         )
     ikb.adjust(len(reactions))
+    return ikb.as_markup()
+
+
+def get_post_buttons_keyboard(
+    state_data: dict[str, Any], post_id: int = -1
+) -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardBuilder()
+    # buttton format  {"name": name, "url": url, "row": row, "column": column}
+    buttons = state_data.get("buttons", [])
+    for button in buttons:
+        # check if button column is 0 it is a single button
+        if button["column"] == 0:
+            ikb.button(
+                text=button["name"],
+                url=button["url"],
+                callback_data=EmojiButtonData(
+                    action="add_reaction",
+                    post_id=post_id,
+                    type="emoji_action",
+                ).pack(),
+            )
+        else:
+            ikb.row()
+            ikb.button(
+                text=button["name"],
+                url=button["url"],
+                callback_data=EmojiButtonData(
+                    action="add_reaction",
+                    post_id=post_id,
+                    type="emoji_action",
+                ).pack(),
+            )
+    ikb.adjust(len(buttons))
     return ikb.as_markup()
 
 
@@ -485,8 +522,19 @@ def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
             btn["text"] = "📎 Добавить медиа"
             btn["action"] = "add_media"
 
-        # if btn["action"] == "add_chat_channel":
-        #     btn["text"] = f"{btn["text"]} ({len(data.get('chat_channel_list', []))})"
+        if data.get("reactions") and btn["action"] == "add_reactions":
+            btn["text"] = "🗑️ Удалить реакции"
+            btn["action"] = "remove_reactions"
+        elif not data.get("reactions") and btn["action"] == "remove_reactions":
+            btn["text"] = "😊 Добавить реакции"
+            btn["action"] = "add_reactions"
+
+        if data.get("buttons") and btn["action"] == "add_buttons":
+            btn["text"] = "🗑️ Удалить кнопки"
+            btn["action"] = "remove_buttons"
+        elif not data.get("buttons") and btn["action"] == "remove_buttons":
+            btn["text"] = "🎛️ Добавить кнопки"
+            btn["action"] = "add_buttons"
 
         if btn["action"] == "sound":
             btn_text = f'{CheckState[data["sound"]]} {btn['text']}'

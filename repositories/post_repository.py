@@ -2,10 +2,20 @@ from typing import Any
 
 from aiogram import html
 from aiogram.types import FSInputFile
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy import select
 
 from bot import bot
-from models import Channel, MediaFile, Post, PostSchedule, User
+from keyboard.keyboard import EmojiButtonData
+from models import (
+    Channel,
+    MediaFile,
+    Post,
+    PostKeyboard,
+    PostReactioButton,
+    PostSchedule,
+    User,
+)
 
 from .base import BaseRepository
 
@@ -27,10 +37,17 @@ class PostRepository(BaseRepository):
         :param post: Пост, который нужно отправить.
         """
         try:
+
+            ikb = InlineKeyboardBuilder()
+            ikb_reaction = InlineKeyboardBuilder()
+            ikb_buttons = InlineKeyboardBuilder()
+
             post = self.get_by_id(post_id)
             channels = post.channels
             total_channels = len(channels)
             sended_channels = 0
+            reactions = post.post_reaction_buttons
+            buttons = post.post_keyboards
 
             media_file_type = (
                 post.post_media_file.media_file_type if post.post_media_file else None
@@ -52,6 +69,37 @@ class PostRepository(BaseRepository):
             channels = []
             channel_members = 0
 
+            if reactions:
+                for reaction in reactions:
+                    ikb_reaction.button(
+                        text=reaction.text,
+                        callback_data=EmojiButtonData(
+                            action="add_reaction",
+                            post_id=post_id,
+                            id=reaction.id,
+                            text=reaction.text,
+                            type="emoji_action",
+                        ).pack(),
+                    )
+                ikb_reaction.adjust(len(reactions))
+                ikb.attach(InlineKeyboardBuilder.from_markup(ikb_reaction.as_markup()))
+
+            if buttons:
+                for button in buttons:
+                    if button.button_column == 0:
+                        ikb_buttons.button(
+                            text=button.button_text,
+                            url=button.button_url,
+                        )
+                    else:
+                        ikb_buttons.row()
+                        ikb_buttons.button(
+                            text=button.button_text,
+                            url=button.button_url,
+                        )
+                ikb_buttons.adjust(len(buttons))
+                ikb.attach(InlineKeyboardBuilder.from_markup(ikb_buttons.as_markup()))
+
             if not len(post.channels):
                 print(f"No channels found for post ID {post_id}")
                 return
@@ -69,6 +117,7 @@ class PostRepository(BaseRepository):
                             caption=text,
                             disable_notification=not post.sound,
                             # protect_content=not post.comments,
+                            reply_markup=ikb.as_markup(),
                             show_caption_above_media=(
                                 True
                                 if media_file_position == "bottom_preview"
@@ -85,6 +134,7 @@ class PostRepository(BaseRepository):
                             video=video,
                             caption=text,
                             disable_notification=not post.sound,
+                            reply_markup=ikb.as_markup(),
                             # protect_content=not post.comments,
                             show_caption_above_media=(
                                 True
@@ -97,6 +147,7 @@ class PostRepository(BaseRepository):
                         message = await bot.send_message(
                             chat_id=channel.chat_id,
                             text=text,
+                            reply_markup=ikb.as_markup(),
                         )
 
                     if post.pin:
@@ -134,7 +185,6 @@ class PostRepository(BaseRepository):
                         )
 
                     if post.signature:
-                        print("Try send post")
                         await bot.send_message(
                             chat_id=channel.chat_id,
                             text=f"Post by @{post.user.username}",
@@ -183,6 +233,8 @@ class PostRepository(BaseRepository):
         try:
             chat_channel_list = post_form.get("chat_channel_list")
             date_frames_confirm = post_form.get("date_frames_confirm", None)
+            reactions = post_form.get("reactions")
+            buttons = post_form.get("buttons")
 
             post = Post(
                 user_id=user.id,
@@ -203,6 +255,27 @@ class PostRepository(BaseRepository):
                     post=post,
                 )
                 self.session.add(post_schedule)
+
+            if reactions:
+                for reaction in reactions:
+                    post_reaction = PostReactioButton(
+                        text=reaction,
+                        post=post,
+                    )
+                    self.session.add(post_reaction)
+                    post.post_reaction_buttons.append(post_reaction)
+
+            if buttons:
+                for button in buttons:
+                    post_keyboard = PostKeyboard(
+                        button_text=button["name"],
+                        button_url=button["url"],
+                        button_column=button["column"],
+                        button_row=button["row"],
+                        post=post,
+                    )
+                    self.session.add(post_keyboard)
+                    post.post_keyboards.append(post_keyboard)
 
             if chat_channel_list:
                 for chat_channel in chat_channel_list:
@@ -273,6 +346,44 @@ class PostRepository(BaseRepository):
             return post
         except Exception as e:
             print(f"Error updating post: {e}")
+            return False
+
+    def update_post_reaction_by_user_id(
+        self, post_id: int, reaction_id: int, user_id: int
+    ) -> bool:
+        """
+        Обновляет реакцию пользователя на пост.
+        :param post_id: ID поста.
+        :param reaction_id: ID реакции.
+        :param user_id: ID пользователя.
+        """
+        try:
+            post = self.get_by_id(post_id)
+            if not post:
+                print(f"Post with ID {post_id} not found")
+                return False
+
+            reaction = self.session.execute(
+                select(PostReactioButton).where(
+                    PostReactioButton.id == reaction_id,
+                    PostReactioButton.post_id == post.id,
+                )
+            ).scalar()
+
+            if not reaction:
+                print(f"Reaction with ID {reaction_id} not found")
+                return False
+
+            if user_id not in reaction.reactions:
+                reaction.reactions.append(user_id)
+            else:
+                reaction.reactions.remove(user_id)
+
+            self.session.add(reaction)
+            self.session.commit()
+            return True
+        except Exception as e:
+            print(f"Error updating post reaction: {e}")
             return False
 
     def delete_post(self, post_id: int) -> bool:

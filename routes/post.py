@@ -18,6 +18,7 @@ from aiogram_calendar import (
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
   ChannelData,
+  EmojiButtonData,
   PostButtonData,
   get_add_media_keyboard,
   get_back_to_post_keyboard,
@@ -25,11 +26,11 @@ from keyboard.keyboard import (
   get_chat_channel_keyboard,
   get_confirm_calendar_keyboard,
   get_confirm_post_keyboard,
+  get_post_buttons_keyboard,
   get_post_publish_settings_keyboard,
   get_reaction_buttons_keyboard,
   get_settings_post_keyboard,
 )
-from models import User
 from repositories import post_repository, user_repository
 from states.post import PostForm
 from utils.media import remove_media_file
@@ -64,6 +65,7 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
     media_file_name = state_data.get("media_file_name")
     media_file_type = state_data.get("media_file_type")
     reactions = state_data.get("reactions")
+    buttons = state_data.get("buttons")
 
     await clear_message_ids(message)  # Clear previous messages
 
@@ -71,6 +73,11 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
     if reactions:
         ikb.attach(
             InlineKeyboardBuilder.from_markup(get_reaction_buttons_keyboard(state_data))
+        )
+
+    if buttons:
+        ikb.attach(
+            InlineKeyboardBuilder.from_markup(get_post_buttons_keyboard(state_data))
         )
 
     ikb.attach(
@@ -205,12 +212,6 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
         message=message,
         state_data=state_data,
     )
-
-
-# @post_router.message(PostForm.chat_channel_list)
-# async def create_post_chat_channel_list_handler(message: Message, state: FSMContext) -> None:
-#     # reply_markup = get_chat_channel_keyboard(channels)
-#     await message.answer("🏷 Выберите каналы/чаты для публикации")
 
 
 @post_router.message(PostForm.recipient_report_chat_id)
@@ -379,7 +380,6 @@ async def set_post_settings_action_handler(
 
         await state.set_state(PostForm.recipient_report_chat_id)
 
-    # Подтверждение создания поста
     if callback_data.action == "confirm_create_post":
         state_data = await state.get_data()
         post = post_repository.create_post(user, state_data)
@@ -453,6 +453,24 @@ async def set_post_settings_action_handler(
             )
             await query.answer(text=f"✅ Медиафайл удален!", show_alert=True)
 
+        state_data = await state.get_data()
+        await answer_with_post(
+            message=query.message,
+            state_data=state_data,
+        )
+
+    if callback_data.action == "remove_reactions":
+        state_data = await state.get_data()
+        await state.update_data(reactions=None)
+        state_data = await state.get_data()
+        await answer_with_post(
+            message=query.message,
+            state_data=state_data,
+        )
+
+    if callback_data.action == "remove_buttons":
+        state_data = await state.get_data()
+        await state.update_data(buttons=None)
         state_data = await state.get_data()
         await answer_with_post(
             message=query.message,
@@ -677,6 +695,7 @@ async def create_post_buttons_handler(message: Message, state: FSMContext) -> No
         for line in lines:
             _buttons = line.split("|")
             parsed_buttons = []
+            column = 0
 
             if not len(_buttons):
                 # try parse single button
@@ -690,20 +709,21 @@ async def create_post_buttons_handler(message: Message, state: FSMContext) -> No
 
             for button in _buttons:
                 parts = button.split("-")
+                column += 1
                 if len(parts) == 2:
                     name = parts[0].strip()
                     url = parts[1].strip()
                     parsed_buttons.append(
                         {"name": name, "url": url, "row": row, "column": column}
                     )
+
             row += 1
 
         await state.update_data(buttons=parsed_buttons)
         state_data = await state.get_data()
-        reply_markup = get_post_publish_settings_keyboard(state_data)
-        await message.answer(
-            text="✅ Кнопки успешно добавлены",
-            reply_markup=reply_markup,
+        await answer_with_post(
+            message=message,
+            state_data=state_data,
         )
     except Exception as e:
         await message.answer(
@@ -713,13 +733,20 @@ async def create_post_buttons_handler(message: Message, state: FSMContext) -> No
         print(e)
 
 
-# @base_router.chat_member()
-# async def remove_pinned_message(event: ChatMemberUpdated):
-#   if event.chat.id == CHANNEL_ID:
-#     try:
-#       # Получаем последнее закрепленное сообщение
-#       pinned_msg = await bot.get_chat(CHANNEL_ID)
-#       if pinned_msg.pinned_message:
-#         await bot.unpin_chat_message(CHANNEL_ID)
-#     except Exception as e:
-#       print(e)
+@post_router.callback_query(EmojiButtonData.filter())
+async def emoji_button_handler(
+    query: CallbackQuery, state: FSMContext, callback_data: EmojiButtonData
+) -> None:
+    """
+    Обработчик добавления эмодзи
+    """
+    print("Reaction", callback_data)
+    try:
+        post_repository.update_post_reaction_by_user_id(
+            callback_data.post_id,
+            callback_data.id,
+            query.from_user.id,
+        )
+    except Exception as e:
+        print(e)
+        return

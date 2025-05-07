@@ -30,6 +30,6 @@ from .MediaFile import MediaFile
 from .Multiposting import Multiposting
 from .Post import Post
 from .PostKeyboard import PostKeyboard
-from .PostReactioButton import PostReactionButton
+from .PostReactioButton import PostReactioButton
 from .PostSchedule import PostSchedule
 from .User import User
