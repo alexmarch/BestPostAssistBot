@@ -124,6 +124,14 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
+                        if post.recipient_post_chat_id:
+                            await bot.send_photo(
+                                chat_id=post.recipient_post_chat_id,
+                                photo=photo,
+                                caption=text,
+                                disable_notification=not post.sound,
+                                reply_markup=ikb.as_markup(),
+                            )
 
                     elif media_file_type == "video":
                         video = FSInputFile(
@@ -142,6 +150,14 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
+                        if post.recipient_post_chat_id:
+                            await bot.send_video(
+                                chat_id=post.recipient_post_chat_id,
+                                video=video,
+                                caption=text,
+                                disable_notification=not post.sound,
+                                reply_markup=ikb.as_markup(),
+                            )
 
                     else:
                         message = await bot.send_message(
@@ -149,12 +165,15 @@ class PostRepository(BaseRepository):
                             text=text,
                             reply_markup=ikb.as_markup(),
                         )
+                        if post.recipient_post_chat_id:
+                            message = await bot.send_message(
+                                chat_id=post.recipient_post_chat_id,
+                                text=text,
+                                reply_markup=ikb.as_markup(),
+                            )
 
                     if post.pin:
-                        print(
-                            f"Pinning message {message.message_id} in channel {channel.chat_id}"
-                        )
-                        await bot.pin_chat_message(
+                        message = await bot.pin_chat_message(
                             chat_id=channel.chat_id,
                             message_id=message.message_id,
                             disable_notification=not post.sound,
@@ -185,7 +204,7 @@ class PostRepository(BaseRepository):
                         )
 
                     if post.signature:
-                        await bot.send_message(
+                        message = await bot.send_message(
                             chat_id=channel.chat_id,
                             text=f"Post by @{post.user.username}",
                         )
@@ -244,6 +263,7 @@ class PostRepository(BaseRepository):
                 pin=True if post_form.get("pin") == "on" else False,
                 signature=True if post_form.get("signature") == "on" else False,
                 recipient_report_chat_id=post_form.get("recipient_report_chat_id"),
+                recipient_post_chat_id=post_form.get("recipient_post_chat_id"),
             )
 
             self.session.add(post)
@@ -362,7 +382,15 @@ class PostRepository(BaseRepository):
             if not post:
                 print(f"Post with ID {post_id} not found")
                 return False
-
+            all_reactions = (
+                self.session.execute(
+                    select(PostReactioButton).where(
+                        PostReactioButton.post_id == post.id,
+                    )
+                )
+                .scalars()
+                .all()
+            )
             reaction = self.session.execute(
                 select(PostReactioButton).where(
                     PostReactioButton.id == reaction_id,
@@ -375,11 +403,11 @@ class PostRepository(BaseRepository):
                 return False
 
             if user_id not in reaction.reactions:
+                for r in all_reactions:
+                    if user_id in r.reactions:
+                        r.reactions.remove(user_id)
                 reaction.reactions.append(user_id)
-            else:
-                reaction.reactions.remove(user_id)
-
-            self.session.add(reaction)
+            # self.session.add(reaction)
             self.session.commit()
             return True
         except Exception as e:

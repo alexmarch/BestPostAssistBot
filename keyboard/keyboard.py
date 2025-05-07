@@ -3,12 +3,14 @@ from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButtonRequestChat,
-    ReplyKeyboardMarkup,
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+  KeyboardButtonRequestChat,
+  ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+
+from models.Post import Post
 
 CheckState = {"on": "✅", "off": "☑️"}
 
@@ -97,6 +99,46 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
         rkb.button(text=btn)
     rkb.adjust(2)
     return rkb.as_markup()
+
+
+def get_created_post_keyboard(post: Post) -> InlineKeyboardMarkup:
+
+    ikb = InlineKeyboardBuilder()
+    ikb_reaction = InlineKeyboardBuilder()
+    ikb_buttons = InlineKeyboardBuilder()
+
+    if post.post_reaction_buttons:
+        for reaction in post.post_reaction_buttons:
+            ikb_reaction.button(
+                text=f"{reaction.text} {len(reaction.reactions) if len(reaction.reactions) > 0 else ''}",
+                callback_data=EmojiButtonData(
+                    action="add_reaction",
+                    post_id=post.id,
+                    id=reaction.id,
+                    text=f"{reaction.text} {len(reaction.reactions)}",
+                    type="emoji_action",
+                ).pack(),
+            )
+        ikb_reaction.adjust(len(post.post_reaction_buttons))
+        ikb.attach(InlineKeyboardBuilder.from_markup(ikb_reaction.as_markup()))
+
+    if post.post_keyboards:
+        for button in post.post_keyboards:
+            if button.button_column == 0:
+                ikb_buttons.button(
+                    text=button.button_text,
+                    url=button.button_url,
+                )
+            else:
+                ikb_buttons.row()
+                ikb_buttons.button(
+                    text=button.button_text,
+                    url=button.button_url,
+                )
+        ikb_buttons.adjust(len(post.post_keyboards))
+        ikb.attach(InlineKeyboardBuilder.from_markup(ikb_buttons.as_markup()))
+
+    return ikb.as_markup()
 
 
 def get_reaction_buttons_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
@@ -412,7 +454,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
             InlineKeyboardButton(
                 text="➡️ Переслать",
                 callback_data=PostButtonData(
-                    action="show_forword_report", type="post_settings_action"
+                    action="show_send_copy_post", type="post_settings_action"
                 ).pack(),
             ),  # Переслать на выбранный канал/чат
         ],

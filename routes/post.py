@@ -26,6 +26,7 @@ from keyboard.keyboard import (
   get_chat_channel_keyboard,
   get_confirm_calendar_keyboard,
   get_confirm_post_keyboard,
+  get_created_post_keyboard,
   get_post_buttons_keyboard,
   get_post_publish_settings_keyboard,
   get_reaction_buttons_keyboard,
@@ -138,6 +139,24 @@ async def add_channel_handler(message: Message) -> None:
     )
 
 
+@post_router.message(Command("edit_post"))
+@post_router.message(F.text == "Изменить пост")
+async def edit_post_handler(message: Message, state: FSMContext) -> None:
+    """
+    Обработчик изменения поста
+    """
+    state_data = await state.get_data()
+    await state.set_state(PostForm.edit_post)
+    await message.answer(
+        text="⬇️ Отправьте сюда пост, который хотите изменить",
+        reply_markup=get_back_to_post_keyboard(state_data),
+    )
+
+@post_router.message(PostForm.edit_post)
+async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
+  file_id = message.photo[-1].file_id
+  print("File ID", message)
+
 @post_router.message(Command("create_post"))
 @post_router.message(F.text == "Создать пост")
 async def create_post_handler(message: Message, state: FSMContext) -> None:
@@ -187,8 +206,8 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
 
     state_data = await state.get_data()
 
-    if state_data.get("media_file_path"):
-        remove_media_file(state_data.get("media_file_path"))
+    # if state_data.get("media_file_path"):
+    #     remove_media_file(state_data.get("media_file_path"))
 
     await state.update_data(
         text=message.text,
@@ -198,10 +217,10 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
         signature="off",
         chat_channel_list=chat_channel,
         is_confirm=True,
-        media_file_path=None,
-        media_file_name=None,
-        media_file_position=None,
-        media_file_type=None,
+        # media_file_path=None,
+        # media_file_name=None,
+        # media_file_position=None,
+        # media_file_type=None,
         time_frames=time_frames,
         time_frames_active=time_frames_active,
     )
@@ -238,6 +257,39 @@ async def create_post_recipient_report_chat_id_handler(
     await state.update_data(
         {
             "recipient_report_chat_id": user.chat_id,
+        }
+    )
+
+    await message.answer(
+        text="✅ Клиент успешно добавлен",
+        reply_markup=get_back_to_post_keyboard(state_data),
+    )
+
+
+@post_router.message(PostForm.recipient_post_chat_id)
+async def create_post_recipient_post_chat_id_handler(
+    message: Message, state: FSMContext
+) -> None:
+    """
+    Обработчик добавления ID чата для копии поста
+    """
+    state_data = await state.get_data()
+
+    if message.text.isdigit():
+        user = user_repository.find_by_chat_id(message.text)
+    else:
+        user = user_repository.find_by_username(message.text)
+
+    if not user:
+        await message.answer(
+            text="⚠️ Пользователь не найден. Введите корректный ID/юзернейм клиента",
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        return
+
+    await state.update_data(
+        {
+            "recipient_post_chat_id": user.chat_id,
         }
     )
 
@@ -379,6 +431,21 @@ async def set_post_settings_action_handler(
         )
 
         await state.set_state(PostForm.recipient_report_chat_id)
+
+    if callback_data.action == "show_send_copy_post":
+        info_message = BlockQuote(
+            "ℹ️ Чтобы копия поста была доставлена, ваш клиент должен запустить бота."
+        )
+        message = f"""⬆️ <b>Копия поста</b>\n\n
+Отправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n
+{info_message.as_html()}\n\n
+"""
+        await query.message.edit_text(
+            text=message,
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_back_to_post_keyboard(state_data),
+        )
+        await state.set_state(PostForm.recipient_post_chat_id)
 
     if callback_data.action == "confirm_create_post":
         state_data = await state.get_data()
@@ -740,12 +807,17 @@ async def emoji_button_handler(
     """
     Обработчик добавления эмодзи
     """
-    print("Reaction", callback_data)
     try:
         post_repository.update_post_reaction_by_user_id(
             callback_data.post_id,
             callback_data.id,
             query.from_user.id,
+        )
+        post = post_repository.get_by_id(callback_data.post_id)
+        print(post)
+        await query.message.edit_reply_markup(
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_created_post_keyboard(post),
         )
     except Exception as e:
         print(e)

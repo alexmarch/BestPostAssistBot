@@ -11,6 +11,7 @@ class Post(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     recipient_report_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    recipient_post_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)
     user: Mapped["User"] = relationship(back_populates="posts")
     channels: Mapped[List["Channel"]] = relationship(
         secondary=association_table, back_populates="posts"

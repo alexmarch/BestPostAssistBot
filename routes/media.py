@@ -59,6 +59,8 @@ async def set_post_media_photo_handler(message: Message, state: FSMContext) -> N
     file_id = message.photo[-1].file_id
     file_size = message.photo[-1].file_size
 
+    print("File ID", file_id, message.photo[-1].file_unique_id)
+
     if file_size > 5 * 1024 * 1024:
         await message.answer(
             "⚠️ Размер файла превышает 5 МБ. Пожалуйста, выберите другой файл.",
