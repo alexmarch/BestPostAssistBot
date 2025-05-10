@@ -1,16 +1,16 @@
 import datetime
 import re
 
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.calendarinterval import CalendarIntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
 
-from models import get_session
 from models.Post import Post
-from repositories.post_repository import PostRepository
 
-post_repository = PostRepository(get_session())
+from . import post_repository
 
 jobstores = {
     "default": SQLAlchemyJobStore(url="sqlite:///database.db"),
@@ -48,7 +48,7 @@ def parse_time_from_str(time_str: str) -> tuple[int, int]:
 
 
 async def job_func(post_id: int):
-    await post_repository.send_post(post_id, True)
+    await post_repository.send_post(post_id, True, create_remove_post_jod)
 
 
 async def job_func_remove(post_id: int, chat_id: str, message_id: int):
@@ -61,12 +61,13 @@ def create_remove_post_jod(
     """
     Create a job to remove a post at a specific datetime.
     """
+    print(f"Create job Removing post {post.id} in chat {chat_id} at {datetime}")
     scheduler.add_job(
-        job_func,
+        job_func_remove,
         args=[post.id, chat_id, message_id],
         id=f"{post.user_id}_{post.id}_{chat_id}_{message_id}_remove",
-        trigger=CalendarIntervalTrigger(
-            start_date=datetime,
+        trigger=DateTrigger(
+            run_date=datetime,
         ),
         replace_existing=True,
     )
@@ -113,8 +114,32 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
             print(f"Error parsing time frame '{time_frame}': {e}")
 
 
+def submited_event_listener(event):
+    """
+    Listener for job submission events.
+    """
+    if event.exception:
+        print(f"Job {event.job_id} failed to execute: {event.exception}")
+    else:
+        print(f"Job {event.job_id} submitted successfully.")
+
+
+def executed_event_listener(event):
+    """
+    Listener for job execution events.
+    """
+    if event.exception:
+        print(f"Job {event.job_id} failed to execute: {event.exception}")
+    else:
+        print(f"Job {event.job_id} executed successfully.")
+
+
 async def start_scheduler():
     """
     Start the scheduler.
     """
+    scheduler.add_listener(submited_event_listener, EVENT_JOB_SUBMITTED)
+    scheduler.add_listener(
+        executed_event_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR
+    )
     scheduler.start()

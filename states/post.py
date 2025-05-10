@@ -10,7 +10,7 @@ class PostForm(StatesGroup):
     media_file_type = State()
     recipient_report_chat_id = State()
     recipient_post_chat_id = State()
-    auto_remove_datetime = State()
+    auto_remove_datetime = State(state="2d")
     time_frames = State()
     time_frames_active = "on"
     date_frames = State()

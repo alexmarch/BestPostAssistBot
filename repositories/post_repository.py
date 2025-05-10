@@ -1,6 +1,6 @@
 import datetime
 import zoneinfo
-from typing import Any
+from typing import Any, Callable
 
 from aiogram import html
 from aiogram.types import FSInputFile
@@ -10,15 +10,14 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-  Channel,
-  MediaFile,
-  Post,
-  PostKeyboard,
-  PostReactioButton,
-  PostSchedule,
-  User,
+    Channel,
+    MediaFile,
+    Post,
+    PostKeyboard,
+    PostReactioButton,
+    PostSchedule,
+    User,
 )
-from utils.scheduler import create_remove_post_jod
 
 from .base import BaseRepository
 
@@ -52,7 +51,10 @@ class PostRepository(BaseRepository):
             return False
 
     async def send_post(
-        self, post_id: int, send_report_to_owner: bool = False
+        self,
+        post_id: int,
+        send_report_to_owner: bool = False,
+        callback: Callable = None,
     ) -> dict[str, Any]:
         """
         Отправляет пост в указанный канал.
@@ -169,13 +171,13 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
-
-                        create_remove_post_jod(
-                            post,
-                            channel.chat_id,
-                            message.message_id,
-                            remove_datetime,
-                        )
+                        if callback is not None:
+                            callback(
+                                post,
+                                channel.chat_id,
+                                message.message_id,
+                                remove_datetime,
+                            )
 
                         if post.recipient_post_chat_id:
                             await bot.send_photo(
@@ -203,12 +205,13 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
-                        create_remove_post_jod(
-                            post,
-                            channel.chat_id,
-                            message.message_id,
-                            remove_datetime,
-                        )
+                        if callback is not None:
+                            callback(
+                                post,
+                                channel.chat_id,
+                                message.message_id,
+                                remove_datetime,
+                            )
                         if post.recipient_post_chat_id:
                             await bot.send_video(
                                 chat_id=post.recipient_post_chat_id,
@@ -224,12 +227,13 @@ class PostRepository(BaseRepository):
                             text=text,
                             reply_markup=ikb.as_markup(),
                         )
-                        create_remove_post_jod(
-                            post,
-                            channel.chat_id,
-                            message.message_id,
-                            remove_datetime,
-                        )
+                        if callback is not None:
+                            callback(
+                                post,
+                                channel.chat_id,
+                                message.message_id,
+                                remove_datetime,
+                            )
                         if post.recipient_post_chat_id:
                             await bot.send_message(
                                 chat_id=post.recipient_post_chat_id,
@@ -347,6 +351,7 @@ class PostRepository(BaseRepository):
                 signature=True if post_form.get("signature") == "on" else False,
                 recipient_report_chat_id=post_form.get("recipient_report_chat_id"),
                 recipient_post_chat_id=post_form.get("recipient_post_chat_id"),
+                auto_remove_datetime=post_form.get("auto_remove_datetime"),
             )
 
             self.session.add(post)

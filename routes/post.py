@@ -30,12 +30,13 @@ from keyboard.keyboard import (
   get_post_buttons_keyboard,
   get_post_publish_settings_keyboard,
   get_reaction_buttons_keyboard,
+  get_remove_post_interval_keyboard,
   get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
 from utils.media import remove_media_file
-from utils.scheduler import create_jod
+from utils.scheduler import create_jod, create_remove_post_jod
 
 from . import post_router
 
@@ -496,7 +497,9 @@ async def set_post_settings_action_handler(
             time_frames_active = state_data.get("time_frames_active")
             date_frames_confirm = state_data.get("date_frames_confirm")
             if not time_frames or time_frames_active == "off":
-                result = await post_repository.send_post(post.id)
+                result = await post_repository.send_post(
+                    post.id, True, create_remove_post_jod
+                )
                 if result:
                     channels = ""
                     for channel in result["channels"]:
@@ -703,6 +706,25 @@ async def set_post_settings_action_handler(
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         await state.set_state(PostForm.reactions)
+
+    if callback_data.action == "show_remove_time":
+        state_data = await state.get_data()
+        await query.message.answer(
+            text="🗑️ Выберите интервал через сколько пост будет удален",
+            reply_markup=get_remove_post_interval_keyboard(state_data),
+        )
+
+    if callback_data.action == "remove_post_interval":
+        await state.update_data(
+            {
+                "auto_remove_datetime": callback_data.data,
+            }
+        )
+        state_data = await state.get_data()
+        await query.message.edit_reply_markup(
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_remove_post_interval_keyboard(state_data),
+        )
 
 
 @post_router.callback_query(PostButtonData.filter(F.type == "post_settings"))

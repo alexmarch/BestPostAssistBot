@@ -3,10 +3,10 @@ from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-  InlineKeyboardButton,
-  InlineKeyboardMarkup,
-  KeyboardButtonRequestChat,
-  ReplyKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButtonRequestChat,
+    ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
@@ -80,6 +80,7 @@ class GeneralSettingsButtonData(CallbackData, prefix="settings"):
 class PostButtonData(CallbackData, prefix="post"):
     action: str
     type: str = "settings"
+    data: str | None = None
 
 
 class PostMediaPositionData(CallbackData, prefix="post_media"):
@@ -99,6 +100,124 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
         rkb.button(text=btn)
     rkb.adjust(2)
     return rkb.as_markup()
+
+
+def get_remove_post_interval_keyboard(
+    state_data: dict[str, Any],
+) -> InlineKeyboardMarkup:
+    """
+    Возвращает маркап клавиатуры для удаления поста [[1d, 2d, 3d,], [1w, 2w, 3w,], [1m, 2m, 3m]]
+    """
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text=(
+                    "✅ 2d"
+                    if state_data.get("auto_remove_datetime") == "2d"
+                    or not state_data.get("auto_remove_datetime")
+                    else "2d"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="2d",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 4d" if state_data.get("auto_remove_datetime") == "4d" else "4d"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="4d",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 6d" if state_data.get("auto_remove_datetime") == "6d" else "6d"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="6d",
+                ).pack(),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=(
+                    "✅ 1w" if state_data.get("auto_remove_datetime") == "1w" else "1w"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="1w",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 2w" if state_data.get("auto_remove_datetime") == "2w" else "2w"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="2w",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 3w" if state_data.get("auto_remove_datetime") == "3w" else "3w"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="3w",
+                ).pack(),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=(
+                    "✅ 1m" if state_data.get("auto_remove_datetime") == "1m" else "1m"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="1m",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 2m" if state_data.get("auto_remove_datetime") == "2m" else "2m"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="2m",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text=(
+                    "✅ 3m" if state_data.get("auto_remove_datetime") == "3m" else "3m"
+                ),
+                callback_data=PostButtonData(
+                    action="remove_post_interval",
+                    type="post_settings_action",
+                    data="3m",
+                ).pack(),
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="‹ Назад к посту",
+                callback_data=PostButtonData(
+                    action="back", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
 def get_created_post_keyboard(post: Post) -> InlineKeyboardMarkup:
@@ -473,14 +592,13 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
             ),  # ✔️ Подтвердите отправку поста с кнопкой подтвердить
         ],
         [
-          # Таймер авто удаления
+            # Таймер авто удаления
             InlineKeyboardButton(
                 text="🕒 Таймер удаления",
                 callback_data=PostButtonData(
                     action="show_remove_time", type="post_settings_action"
                 ).pack(),
             ),
-
         ],
         [
             InlineKeyboardButton(

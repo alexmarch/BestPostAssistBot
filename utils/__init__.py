@@ -1,6 +1,11 @@
 import re
 from datetime import datetime, time
 
+from models import get_session
+from repositories.post_repository import PostRepository
+
+post_repository = PostRepository(get_session())
+
 
 def parse_time(time_str: str) -> time:
     # Remove any non-numeric characters (like spaces or colons)
@@ -36,3 +41,6 @@ def parse_button(button_str: str) -> str:
             raise ValueError(f"Invalid button format: {button}")
 
     return "|".join(parsed_buttons)
+
+
+from .scheduler import create_remove_post_jod
