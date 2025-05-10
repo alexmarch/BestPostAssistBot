@@ -473,6 +473,16 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
             ),  # ✔️ Подтвердите отправку поста с кнопкой подтвердить
         ],
         [
+          # Таймер авто удаления
+            InlineKeyboardButton(
+                text="🕒 Таймер удаления",
+                callback_data=PostButtonData(
+                    action="show_remove_time", type="post_settings_action"
+                ).pack(),
+            ),
+
+        ],
+        [
             InlineKeyboardButton(
                 text="🤖 Интеграция с ИИ",
                 callback_data=PostButtonData(

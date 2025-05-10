@@ -1,6 +1,7 @@
 from typing import List
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, func
+from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text, func
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from . import Base, association_table
@@ -30,6 +31,9 @@ class Post(Base):
         Boolean, default=False
     )  # Autosignature post
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    messages_ids: Mapped[list] = mapped_column(
+        MutableList.as_mutable(JSON), nullable=True, default=list  # type: ignore
+    )
     created_at: Mapped[str] = mapped_column(
         String(100), server_default=func.now(), nullable=False
     )

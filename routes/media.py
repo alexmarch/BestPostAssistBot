@@ -149,8 +149,8 @@ async def set_post_media_video_handler(message: Message, state: FSMContext) -> N
     if state_data != PostForm.upload_media:
         return
 
-    file_id = message.video.file_id
-    file_size = message.video.file_size
+    file_id = message.video[-1].file_id
+    file_size = message.video[-1].file_size
 
     if file_size > 5 * 1024 * 1024:
         await message.answer(

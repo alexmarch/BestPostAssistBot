@@ -166,14 +166,14 @@ class PostRepository(BaseRepository):
                             reply_markup=ikb.as_markup(),
                         )
                         if post.recipient_post_chat_id:
-                            message = await bot.send_message(
+                            await bot.send_message(
                                 chat_id=post.recipient_post_chat_id,
                                 text=text,
                                 reply_markup=ikb.as_markup(),
                             )
 
                     if post.pin:
-                        message = await bot.pin_chat_message(
+                        await bot.pin_chat_message(
                             chat_id=channel.chat_id,
                             message_id=message.message_id,
                             disable_notification=not post.sound,
@@ -182,6 +182,24 @@ class PostRepository(BaseRepository):
                     if message and channel:
                         sended_channels += 1
                         channels.append(channel)
+                        post.messages_ids.append(
+                            {
+                                "chat_id": channel.chat_id,
+                                "message_id": message.message_id,
+                            }
+                        )
+                        if not channel.messages_ids:
+                            channel.messages_ids = []
+                        channel.messages_ids.append(
+                            {
+                                "chat_id": channel.chat_id,
+                                "post_id": post.id,
+                                "message_id": message.message_id,
+                            }
+                        )
+                        self.session.add(channel)
+                        self.session.add(post)
+                        self.session.commit()
 
                     if not post.comments:
                         # get all user ids from channel
@@ -305,7 +323,7 @@ class PostRepository(BaseRepository):
                     if channel:
                         post.channels.append(channel)
 
-            if post_form["media_file_name"]:
+            if post_form.get("media_file_name"):
                 # Создаем новый объект MediaFile
                 post_media_file = MediaFile(
                     media_file_path=post_form.get("media_file_path"),
@@ -321,6 +339,37 @@ class PostRepository(BaseRepository):
         except Exception as e:
             print(f"Error creating post: {e}")
             return False
+
+    def get_post_by_forward_message(
+        self, user_id: int, forward_from_chat_id: str, forward_from_message_id: int
+    ) -> Post | None:
+        # fund channel by forward_from_chat_id and user_id
+        channel = self.session.execute(
+            select(Channel).where(
+                Channel.chat_id == forward_from_chat_id,
+                Channel.user_id == user_id,
+            )
+        ).scalar()
+
+        if not channel:
+            print(f"Channel with chat_id {forward_from_chat_id} not found")
+            return None
+
+        if not channel.messages_ids:
+            print(f"Channel with chat_id {forward_from_chat_id} has no messages_ids")
+            return None
+        # find post by forward_from_message_id and channel
+        for message_id in channel.messages_ids:
+            if (
+                message_id["chat_id"] == forward_from_chat_id
+                and message_id["message_id"] == forward_from_message_id
+            ):
+                post = self.session.execute(
+                    select(Post).where(Post.id == message_id["post_id"])
+                ).scalar()
+                return post
+
+        return None
 
     def update_post(self, post_id: int, post_form: dict[str, Any]) -> Post | bool:
         """

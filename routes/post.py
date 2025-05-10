@@ -152,10 +152,48 @@ async def edit_post_handler(message: Message, state: FSMContext) -> None:
         reply_markup=get_back_to_post_keyboard(state_data),
     )
 
+
 @post_router.message(PostForm.edit_post)
 async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
-  file_id = message.photo[-1].file_id
-  print("File ID", message)
+    state_data = await state.get_data()
+    if message.forward_from_chat and message.forward_from_message_id:
+        user = user_repository.find_by_chat_id(message.from_user.id)
+        forward_from_chat_id = message.forward_from_chat.id
+        forward_from_message_id = message.forward_from_message_id
+        post = post_repository.get_post_by_forward_message(
+            user.id, str(forward_from_chat_id), forward_from_message_id
+        )
+        if not post:
+            await message.answer(
+                text="⚠️ Пост не найден. Отправьте корректный пост.",
+                reply_markup=get_back_to_post_keyboard(state_data),
+            )
+            return
+
+        await state.update_data(
+            {
+                "text": post.text,
+                "post_id": post.id,
+                "channel_id": forward_from_chat_id,
+                "sound": "on" if post.sound else "off",
+                "comments": "on" if post.comments else "off",
+                "pin": "on" if post.pin else "off",
+                "forward_from_message_id": forward_from_message_id,
+                "signature": "on" if post.signature else "off",
+                # "chat_channel_list": post.chat_channel_list,
+                "is_confirm": True,
+                "media_file_path": post.post_media_file.media_file_path,
+                "media_file_name": post.post_media_file.media_file_name,
+                "media_file_position": post.post_media_file.media_file_position,
+                "media_file_type": post.post_media_file.media_file_type,
+            }
+        )
+        state_data = await state.get_data()
+        await answer_with_post(
+            message=message,
+            state_data=state_data,
+        )
+
 
 @post_router.message(Command("create_post"))
 @post_router.message(F.text == "Создать пост")
