@@ -34,6 +34,9 @@ class Post(Base):
     messages_ids: Mapped[list] = mapped_column(
         MutableList.as_mutable(JSON), nullable=True, default=list  # type: ignore
     )
+    auto_remove_datetime: Mapped[str] = mapped_column(
+        String(100), nullable=True, default="48h"
+    )
     created_at: Mapped[str] = mapped_column(
         String(100), server_default=func.now(), nullable=False
     )

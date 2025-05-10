@@ -51,6 +51,27 @@ async def job_func(post_id: int):
     await post_repository.send_post(post_id, True)
 
 
+async def job_func_remove(post_id: int, chat_id: str, message_id: int):
+    await post_repository.remove_post(post_id, chat_id, message_id)
+
+
+def create_remove_post_jod(
+    post: Post, chat_id: str, message_id: int, datetime: datetime.datetime
+):
+    """
+    Create a job to remove a post at a specific datetime.
+    """
+    scheduler.add_job(
+        job_func,
+        args=[post.id, chat_id, message_id],
+        id=f"{post.user_id}_{post.id}_{chat_id}_{message_id}_remove",
+        trigger=CalendarIntervalTrigger(
+            start_date=datetime,
+        ),
+        replace_existing=True,
+    )
+
+
 def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
     post_schedule = post.post_schedule
     for time_frame in time_frames:

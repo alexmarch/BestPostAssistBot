@@ -1,3 +1,5 @@
+import datetime
+import zoneinfo
 from typing import Any
 
 from aiogram import html
@@ -8,14 +10,15 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-    Channel,
-    MediaFile,
-    Post,
-    PostKeyboard,
-    PostReactioButton,
-    PostSchedule,
-    User,
+  Channel,
+  MediaFile,
+  Post,
+  PostKeyboard,
+  PostReactioButton,
+  PostSchedule,
+  User,
 )
+from utils.scheduler import create_remove_post_jod
 
 from .base import BaseRepository
 
@@ -28,6 +31,25 @@ class PostRepository(BaseRepository):
         :return: Пост или None, если пост не найден.
         """
         return self.session.execute(select(Post).where(Post.id == post_id)).scalar()
+
+    async def remove_post(self, post_id: int, chat_id: str, message_id: int) -> bool:
+        """
+        Удаляет пост по его ID.
+        :param post_id: ID поста.
+        :param chat_id: ID чата.
+        :param message_id: ID сообщения.
+        """
+        try:
+            post = self.get_by_id(post_id)
+            if not post:
+                print(f"Post with ID {post_id} not found")
+                return False
+
+            await bot.delete_message(chat_id=chat_id, message_id=message_id)
+            return True
+        except Exception as e:
+            print(f"Error removing post: {e}")
+            return False
 
     async def send_post(
         self, post_id: int, send_report_to_owner: bool = False
@@ -48,6 +70,29 @@ class PostRepository(BaseRepository):
             sended_channels = 0
             reactions = post.post_reaction_buttons
             buttons = post.post_keyboards
+
+            # it can be 8h, 3d, 1w, 2M parse and create datetime
+            auto_remove_datetime = post.auto_remove_datetime
+            _now = datetime.datetime.now(tz=zoneinfo.ZoneInfo("Europe/Kyiv"))
+            if auto_remove_datetime:
+                if auto_remove_datetime[-1] == "h":
+                    hours = int(auto_remove_datetime[:-1])
+                    remove_datetime = _now + datetime.timedelta(hours=hours)
+                elif auto_remove_datetime[-1] == "d":
+                    days = int(auto_remove_datetime[:-1])
+                    remove_datetime = _now + datetime.timedelta(days=days)
+                elif auto_remove_datetime[-1] == "w":
+                    weeks = int(auto_remove_datetime[:-1])
+                    remove_datetime = _now + datetime.timedelta(weeks=weeks)
+                elif auto_remove_datetime[-1] == "M":
+                    months = int(auto_remove_datetime[:-1])
+                    remove_datetime = _now + datetime.timedelta(days=months * 30)
+                else:
+                    # default 48h
+                    remove_datetime = _now + datetime.timedelta(hours=48)
+            else:
+                # default 48h
+                remove_datetime = _now + datetime.timedelta(hours=48)
 
             media_file_type = (
                 post.post_media_file.media_file_type if post.post_media_file else None
@@ -124,6 +169,14 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
+
+                        create_remove_post_jod(
+                            post,
+                            channel.chat_id,
+                            message.message_id,
+                            remove_datetime,
+                        )
+
                         if post.recipient_post_chat_id:
                             await bot.send_photo(
                                 chat_id=post.recipient_post_chat_id,
@@ -150,6 +203,12 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
+                        create_remove_post_jod(
+                            post,
+                            channel.chat_id,
+                            message.message_id,
+                            remove_datetime,
+                        )
                         if post.recipient_post_chat_id:
                             await bot.send_video(
                                 chat_id=post.recipient_post_chat_id,
@@ -164,6 +223,12 @@ class PostRepository(BaseRepository):
                             chat_id=channel.chat_id,
                             text=text,
                             reply_markup=ikb.as_markup(),
+                        )
+                        create_remove_post_jod(
+                            post,
+                            channel.chat_id,
+                            message.message_id,
+                            remove_datetime,
                         )
                         if post.recipient_post_chat_id:
                             await bot.send_message(
