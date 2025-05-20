@@ -376,7 +376,7 @@ async def process_dialog_calendar(
 ):
     state_data = await state.get_data()
     selected, date = await DialogCalendar(
-        locale=await get_user_locale(callback_query.from_user)
+        locale="uk_UA.UTF-8"
     ).process_selection(callback_query, callback_data)
     if selected:
         await callback_query.message.answer(
@@ -391,7 +391,7 @@ async def process_simple_calendar(
 ):
     state_data = await state.get_data()
     simplecalendar = SimpleCalendar(
-        locale=await get_user_locale(callback_query.from_user)
+        locale="uk_UA.UTF-8"
     )
 
     # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
@@ -434,7 +434,7 @@ async def set_post_settings_action_handler(
     """
     user = user_repository.find_by_chat_id(query.from_user.id)
     state_data = await state.get_data()
-    simplecalendar = SimpleCalendar(locale="uk_UA")
+    simplecalendar = SimpleCalendar(locale="uk_UA.UTF-8")
 
     if callback_data.action == "publish_post":
         await clear_message_ids(query.message)
