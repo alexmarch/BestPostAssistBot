@@ -8,30 +8,30 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-  DialogCalendar,
-  DialogCalendarCallback,
-  SimpleCalendar,
-  SimpleCalendarCallback,
-  get_user_locale,
+    DialogCalendar,
+    DialogCalendarCallback,
+    SimpleCalendar,
+    SimpleCalendarCallback,
+    get_user_locale,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-  ChannelData,
-  EmojiButtonData,
-  PostButtonData,
-  get_add_media_keyboard,
-  get_back_to_post_keyboard,
-  get_channel_list_keyboard,
-  get_chat_channel_keyboard,
-  get_confirm_calendar_keyboard,
-  get_confirm_post_keyboard,
-  get_created_post_keyboard,
-  get_post_buttons_keyboard,
-  get_post_publish_settings_keyboard,
-  get_reaction_buttons_keyboard,
-  get_remove_post_interval_keyboard,
-  get_settings_post_keyboard,
+    ChannelData,
+    EmojiButtonData,
+    PostButtonData,
+    get_add_media_keyboard,
+    get_back_to_post_keyboard,
+    get_channel_list_keyboard,
+    get_chat_channel_keyboard,
+    get_confirm_calendar_keyboard,
+    get_confirm_post_keyboard,
+    get_created_post_keyboard,
+    get_post_buttons_keyboard,
+    get_post_publish_settings_keyboard,
+    get_reaction_buttons_keyboard,
+    get_remove_post_interval_keyboard,
+    get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
@@ -210,7 +210,8 @@ async def create_post_handler(message: Message, state: FSMContext) -> None:
 
 @post_router.message(
     PostForm.text,
-    lambda msg: msg.text.lower()
+    lambda msg: msg.text
+    and msg.text.lower()
     not in [
         "настройки",
         "добавить канал/чат",
