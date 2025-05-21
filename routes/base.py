@@ -23,9 +23,8 @@ async def start_handler(message: Message) -> None:
             as_marked_section("", "Автоподпись постов прямо в канале", marker="✍️ "),
         )
     )
-    subtitle = BlockQuote(Underline("Бот создает:"))
     await message.answer(
-        f"<b>Бот Автоматизации</b> ведения Telegram Каналов и Чатов \n\n {subtitle.as_html()}\n{content.as_html()}",
+        f"<b>Бот Автоматизации</b> ведения Telegram Каналов и Чатов \n\n <b>🤖 Бот создает:</b>\n\n{content.as_html()}",
         reply_markup=get_main_keyboard(),
     )
 

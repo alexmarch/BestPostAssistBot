@@ -375,9 +375,9 @@ async def process_dialog_calendar(
     callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
 ):
     state_data = await state.get_data()
-    selected, date = await DialogCalendar(
-        locale="uk_UA.UTF-8"
-    ).process_selection(callback_query, callback_data)
+    selected, date = await DialogCalendar(locale="uk_UA.UTF-8").process_selection(
+        callback_query, callback_data
+    )
     if selected:
         await callback_query.message.answer(
             f'You selected {date.strftime("%d/%m/%Y")}',
@@ -390,9 +390,7 @@ async def process_simple_calendar(
     callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
 ):
     state_data = await state.get_data()
-    simplecalendar = SimpleCalendar(
-        locale="uk_UA.UTF-8"
-    )
+    simplecalendar = SimpleCalendar(locale="uk_UA.UTF-8")
 
     # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
     selected, date = await simplecalendar.process_selection(
@@ -515,7 +513,7 @@ async def set_post_settings_action_handler(
                 multiposting = BlockQuote("\n".join(time_frames)).as_html()
 
                 if date_frames_confirm:
-                    multiposting = f"📅 Дата публикации:\n {BlockQuote(date_frames_confirm).as_html()}\n {multiposting}\n"
+                    multiposting = f"<b>📅 Дата публикации:</b>\n {BlockQuote(date_frames_confirm).as_html()}\n {multiposting}\n"
 
                 await query.message.answer(
                     text=f"✅ <b>Публикация завершена.</b>\n\n {multiposting}\n\n Вы получите уведомление о публикации поста.\n\n",
@@ -682,7 +680,7 @@ async def set_post_settings_action_handler(
                 }
             )
             await query.message.edit_text(
-                text=f"📅 Дата публикации: {BlockQuote(date_frames).as_html()}",
+                text=f"<b>📅 Дата публикации:</b>\n {BlockQuote(date_frames).as_html()}",
                 inline_message_id=query.inline_message_id,
                 reply_markup=get_post_publish_settings_keyboard(state_data),
             )
@@ -709,9 +707,10 @@ async def set_post_settings_action_handler(
 
     if callback_data.action == "show_remove_time":
         state_data = await state.get_data()
-        await query.message.answer(
+        await query.message.edit_text(
             text="🗑️ Выберите интервал через сколько пост будет удален",
             reply_markup=get_remove_post_interval_keyboard(state_data),
+            inline_message_id=query.inline_message_id,
         )
 
     if callback_data.action == "remove_post_interval":
@@ -771,6 +770,7 @@ async def handle_request_chat(message: Message) -> None:
                     f"Канал/чат уже добавлен:\n\n{html.blockquote(channel.title)}"
                 )
                 return
+            print(chat_info, chat_info.title)
             user_repository.add_channel(
                 user, str(chat_info.chat_id), chat_info.title, type
             )

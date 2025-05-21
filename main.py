@@ -5,7 +5,7 @@ import sys
 from aiogram.types import BotCommand
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(".env.app")
 
 from bot import bot, dp
 from models import create_all
@@ -30,7 +30,7 @@ async def main() -> None:
 
     dp.include_routers(base_router, post_router, user_router)
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, close_bot_session=True)
 
 
 if __name__ == "__main__":

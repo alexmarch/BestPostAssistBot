@@ -311,7 +311,7 @@ class PostRepository(BaseRepository):
                 try:
                     await bot.send_message(
                         chat_id=post.recipient_report_chat_id,
-                        text=f"✅ Отправка завершена!\n\n📨 Доставлено {sended_channels}/{total_channels}:\n\n",
+                        text=f"<b>✅ Отправка завершена!</b>\n\n<b>📨 Доставлено:</b> {sended_channels}/{total_channels}\n\n",
                     )
                 except Exception as e:
                     print(f"Error sending report to user: {e}")
@@ -319,7 +319,7 @@ class PostRepository(BaseRepository):
             if send_report_to_owner:
                 await bot.send_message(
                     chat_id=post.user.chat_id,
-                    text=f"✅ Отправка завершена!\n\n📨 Доставлено {sended_channels}/{total_channels}:\n\n{channels}\n\n",
+                    text=f"<b>✅ Отправка завершена!</b>\n\n<b>📨 Доставлено:</b> {sended_channels}/{total_channels}\n\n{channels}\n\n",
                 )
             return {
                 "sended_channels": sended_channels,

@@ -7,6 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.calendarinterval import CalendarIntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from models.Post import Post
 
@@ -19,29 +20,60 @@ jobstores = {
 scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 
-def parse_time_from_str(time_str: str) -> tuple[int, int]:
+def parse_schedule_string(s):
+    s = s.strip()
+
+    # Time of day: HH:MM format
+    if re.match(r"^\d{1,2}:\d{2}$", s):
+        hour, minute = map(int, s.split(":"))
+        return "cron", {"hour": hour, "minute": minute}
+
+    # Duration format: "Xh Ym"
+    match = re.match(r"(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?", s)
+    if match:
+        hours = int(match.group(1)) if match.group(1) else 0
+        minutes = int(match.group(2)) if match.group(2) else 0
+        return "interval", {"hours": hours, "minutes": minutes}
+
+    raise ValueError(f"Invalid schedule format: {s}")
+
+
+def parse_time_from_str(time_str: str) -> str:
     """
     Parse a time string in various formats (e.g., "HH:MM", "HH MM", "HHMM")
     and return hours and minutes
     """
     try:
         # Match formats like "12:00", "12 00", or "1200" or "12"
-        match = re.match(r"^(\d{1,2})(?::|\s)?(\d{2})?", time_str)
-        if not match:
-            raise ValueError("Invalid time format no match found")
+        match = re.match(r"^(\d{1,2})(m|h)?(?::|\s)?(\d{1,2})?(m|h)?", time_str)
 
-        hours = int(match.group(1))
-        minutes = (
-            int(match.group(2)) if match.group(2) else 0
-        )  # Default to 0 if minutes are not provided
+        duration_time = int(match.group(1)) if match.group(1) else 0
+        duration_time2 = int(match.group(3)) if match.group(3) else None
+        duration_str = match.group(2) if match.group(2) else ""
+        duration_str2 = match.group(4) if match.group(4) else ""
 
-        if hours and minutes is None:
-            minutes = 0
-        # Validate hours and minutes
-        if not (0 <= hours < 24 and 0 <= minutes < 60):
+        first_interval = ""
+        second_interval = ""
+
+        if duration_str in ["m", "h"] and duration_time > 0:
+            first_interval = f"{duration_time}{duration_str} "
+            if duration_str == "m" and duration_time < 15:
+                raise ValueError("Minimum interval is 15 minutes")
+
+        elif duration_time > 0:
+            first_interval = f"{duration_time}:{'00' if duration_time2 is None else ""}"
+
+        if duration_str2 in ["m", "h"] and duration_time2 > 0:
+            second_interval = f"{duration_time2}{duration_str2}"
+        elif duration_time2 is not None:
+            second_interval = (
+                f"{duration_time2 if duration_time2 > 0 else str(duration_time2) + '0'}"
+            )
+
+        if not first_interval:
             raise ValueError("Invalid time format")
 
-        return hours, minutes
+        return f"{first_interval}{second_interval}"
 
     except ValueError:
         raise ValueError("Invalid time format")
@@ -75,41 +107,40 @@ def create_remove_post_jod(
 
 def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
     post_schedule = post.post_schedule
+    _date = None
+
+    if post_schedule and post_schedule.is_active:
+        _date = datetime.datetime.strptime(
+            post_schedule.schedule_date_frames, "%d/%m/%Y"
+        )
+    index = 0
     for time_frame in time_frames:
         try:
-            hours, minutes = time_frame.split(":")
-            if post_schedule and post_schedule.is_active:
-                _date = datetime.datetime.strptime(
-                    post_schedule.schedule_date_frames, "%d/%m/%Y"
-                )
+            _type, params = parse_schedule_string(time_frame)
+            print(f"Parsed duration: {_type}, {params} minutes")
+            if _type == "interval":
                 scheduler.add_job(
                     job_func,
                     args=[post.id],
-                    id=f"{post.user_id}_{post.id}_{time_frame}",
-                    trigger=CronTrigger(
-                        year=_date.year,
-                        month=_date.month,
-                        day=_date.day,
-                        hour=hours,
-                        minute=minutes,
+                    id=f"{post.user_id}_{post.id}_{index}_interval",
+                    trigger=IntervalTrigger(
+                        start_date=_date,
+                        **params,
                     ),
                     replace_existing=True,
                 )
-            else:
+            elif _type == "cron":
                 scheduler.add_job(
                     job_func,
                     args=[post.id],
-                    id=f"{post.user_id}_{post.id}_{time_frame}",
+                    id=f"{post.user_id}_{post.id}_{index}cron",
                     trigger=CronTrigger(
-                        hour=hours,
-                        minute=minutes,
-                        second=0,
-                        day_of_week="*",
-                        month="*",
-                        day="*",
+                        start_date=_date,
+                        **params,
                     ),
                     replace_existing=True,
                 )
+            index += 1
         except ValueError as e:
             print(f"Error parsing time frame '{time_frame}': {e}")
 

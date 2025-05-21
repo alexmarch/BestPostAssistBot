@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
+    ChatAdministratorRights,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     KeyboardButtonRequestChat,
@@ -735,22 +736,6 @@ def get_chat_channel_keyboard() -> ReplyKeyboardMarkup:
                     request_title=True,
                     chat_is_channel=True,
                     bot_is_member=True,
-                    # bot_administrator_rights=ChatAdministratorRights(
-                    #   is_anonymous=False,
-                    #   can_manage_chat=False,
-                    #   can_manage_video_chats=False,
-                    #   can_promote_members=False,
-                    #   can_change_info=False,
-                    #   can_post_stories=False,
-                    #   can_edit_stories=False,
-                    #   can_delete_stories=False,
-                    #   can_post_messages=True,
-                    #   can_edit_messages=True,
-                    #   can_delete_messages=True,
-                    #   can_invite_users=True,
-                    #   can_restrict_members=True,
-                    #   can_pin_messages=True,
-                    # )
                 ),
             )
         elif btn == "Чат":
