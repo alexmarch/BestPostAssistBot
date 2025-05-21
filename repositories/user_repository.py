@@ -58,6 +58,13 @@ class UserRepository(BaseRepository):
             .all()
         )
 
+    def count_posting_tasks(self, user: User) -> int:
+        user_posts = (
+            self.session.execute(select(Post).where(Post.user_id == user.id))
+            .scalars()
+            .all()
+        )
+
     def add_channel(self, user: User, chat_id: str, title: str, type: str) -> Channel:
         channel = Channel(user_id=user.id, chat_id=chat_id, title=title, type=type)
         self.session.add(channel)

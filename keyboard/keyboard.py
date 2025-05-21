@@ -76,6 +76,7 @@ class EmojiButtonData(CallbackData, prefix="emoji"):
 class GeneralSettingsButtonData(CallbackData, prefix="settings"):
     action: str
     type: str = "general_settings"
+    data: str | None = None
 
 
 class PostButtonData(CallbackData, prefix="post"):
@@ -431,7 +432,7 @@ def get_back_to_post_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarku
                     action="back", type="post_settings_action"
                 ).pack(),
             )
-        ],
+        ]
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
@@ -442,7 +443,39 @@ def get_post_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     pass
 
 
+def get_post_jobs_keyboard(data: Dict[str, Any], jobs: list) -> InlineKeyboardMarkup:
+    """Возвращает маркап клавиатуры для задач постинга"""
+    inline_kb_list = []
+    index = 0
+    for job in jobs:
+        inline_kb_list.append(
+            [
+                InlineKeyboardButton(
+                    text=f"🗑️ Удалить задачу {job.id}",
+                    callback_data=GeneralSettingsButtonData(
+                        action="delete_post_job",
+                        type="general_settings_action",
+                        data=str(index),
+                    ).pack(),
+                )
+            ]
+        )
+        index += 1
+    inline_kb_list.append(
+        [
+            InlineKeyboardButton(
+                text="‹ Назад",
+                callback_data=GeneralSettingsButtonData(
+                    action="back", type="general_settings_action"
+                ).pack(),
+            )
+        ]
+    )
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
 def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
+    text = data.get("text", None)
     inline_kb_list = [
         [
             InlineKeyboardButton(
@@ -452,6 +485,26 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
                 ).pack(),
             )
         ],
+        [
+            InlineKeyboardButton(
+                text="🗒️ Журнал задач постинга",
+                callback_data=GeneralSettingsButtonData(
+                    action="show_posting_tasks", type="general_settings_action"
+                ).pack(),
+            )
+        ],
+        (
+            [
+                InlineKeyboardButton(
+                    text=f"‹ Назад к посту",
+                    callback_data=PostButtonData(
+                        action="back", type="post_settings_action"
+                    ).pack(),
+                )
+            ]
+            if text
+            else []
+        ),
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
@@ -495,7 +548,7 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         (
             [
                 InlineKeyboardButton(
-                    text=f"Назад к посту",
+                    text=f"‹ Назад к посту",
                     callback_data=PostButtonData(
                         action="back", type="post_settings_action"
                     ).pack(),

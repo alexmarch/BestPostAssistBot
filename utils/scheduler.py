@@ -105,6 +105,21 @@ def create_remove_post_jod(
     )
 
 
+def remove_job_by_id(job_id: str) -> bool:
+    """
+    Remove a job by its ID.
+    """
+    job = scheduler.get_job(job_id)
+    if job:
+        print(f"Removing job {job_id}")
+        scheduler.remove_job(job_id)
+        return True
+    else:
+        print(f"Job {job_id} not found")
+
+    return False
+
+
 def remove_job_by_time_interval(time_frames: list[str], user_id: int):
     posts = post_repository.get_all_posts_by_user_id(user_id)
     for post in posts:
@@ -117,9 +132,7 @@ def remove_job_by_time_interval(time_frames: list[str], user_id: int):
                     job = scheduler.get_job(id)
                     if job:
                         print(f"Removing job {id} for post {post.id}")
-                        scheduler.remove_job(
-                            id
-                        )
+                        scheduler.remove_job(id)
                 elif _type == "cron":
                     id = f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
                     job = scheduler.get_job(id)
@@ -130,6 +143,34 @@ def remove_job_by_time_interval(time_frames: list[str], user_id: int):
                         )
             except ValueError as e:
                 print(f"Error parsing time frame '{time_frame}': {e}")
+
+
+def get_all_jobs_by_user_id(time_frames: list[str], user_id: int) -> list:
+    """
+    Get all jobs for a user by user_id.
+    """
+    posts = post_repository.get_all_posts_by_user_id(user_id)
+    # user_multiposting = user_repository.get_multiposting_by_id(user_id)
+    user_multiposting = None
+    jobs = []
+    for post in posts:
+        for time_frame in time_frames:
+            try:
+                _type, params = parse_schedule_string(time_frame)
+                print(f"Parsed duration: {_type}, {params} minutes")
+                if _type == "interval":
+                    id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval"
+                    job = scheduler.get_job(id)
+                    if job:
+                        jobs.append(job)
+                elif _type == "cron":
+                    id = f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
+                    job = scheduler.get_job(id)
+                    if job:
+                        jobs.append(job)
+            except ValueError as e:
+                print(f"Error parsing time frame '{time_frame}': {e}")
+    return jobs
 
 
 def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
