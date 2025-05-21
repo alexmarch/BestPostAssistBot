@@ -3,6 +3,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.utils.formatting import BlockQuote, Underline, as_list, as_marked_section
 
+from bot import OWNER_ID, bot
 from keyboard.keyboard import get_main_keyboard
 from repositories import user_repository
 
@@ -38,3 +39,8 @@ async def start_handler(message: Message) -> None:
             message.from_user.full_name,
             timezone,
         )
+        if OWNER_ID:
+            await bot.send_message(
+                OWNER_ID,
+                f"New user: {message.from_user.id} {message.from_user.username} {message.from_user.full_name}",
+            )
