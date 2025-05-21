@@ -691,7 +691,7 @@ async def set_post_settings_action_handler(
         state_data = await state.get_data()
         await clear_message_ids(query.message)
         await query.message.answer(
-            text=f"⬇️ Отправьте кнопки в формате:\n\n{ BlockQuote("Название - Ссылка").as_html()} {BlockQuote ('Название - Ссылка|Название - Ссылка').as_html()} Результат: 2 кнопки в столбик\n\n",
+            text=f"<b>⬇️ Отправьте кнопки в формате:</b>\n\n{ BlockQuote("Название - Ссылка").as_html()}\n\n Кнопки могут быть разделены символом `|` для столбцов в строке:\n {BlockQuote ('Название - Ссылка|Название - Ссылка\n\n Результат: 2 кнопки в столбик').as_html()}\n\n",
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         await state.set_state(PostForm.buttons)
@@ -700,7 +700,7 @@ async def set_post_settings_action_handler(
         state_data = await state.get_data()
         await clear_message_ids(query.message)
         await query.message.answer(
-            text="⬇️ Отправьте реакции в формате:\n\n❤️/👍/😁/🤔/🤬\nДа/Нет/Не знаю",
+            text=f"<b>⬇️ Отправьте реакции в формате:</b>\n { BlockQuote('❤️/👍/😁/🤔/🤬').as_html() }\n\n <b>Либо в текстовом формате:</b> { BlockQuote('Да/Нет/Не знаю').as_html() }",
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         await state.set_state(PostForm.reactions)

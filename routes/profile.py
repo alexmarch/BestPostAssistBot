@@ -11,7 +11,7 @@ from keyboard.keyboard import (
 )
 from repositories import user_repository
 from states.post import PostForm
-from utils.scheduler import parse_time_from_str
+from utils.scheduler import parse_time_from_str, remove_job_by_time_interval
 
 from . import user_router
 
@@ -84,6 +84,7 @@ async def show_general_settings_handler(
 
     if callback_data.action == "delete_multiposting_timeframe":
         user_repository.delete_multiposting_timeframe(user)
+        remove_job_by_time_interval(state_data.get("time_frames"), user.id)
         await state.update_data(time_frames=None)
         state_data = await state.get_data()
         await query.message.edit_text(

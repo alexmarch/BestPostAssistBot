@@ -105,6 +105,33 @@ def create_remove_post_jod(
     )
 
 
+def remove_job_by_time_interval(time_frames: list[str], user_id: int):
+    posts = post_repository.get_all_posts_by_user_id(user_id)
+    for post in posts:
+        for time_frame in time_frames:
+            try:
+                _type, params = parse_schedule_string(time_frame)
+                print(f"Parsed duration: {_type}, {params} minutes")
+                if _type == "interval":
+                    id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval"
+                    job = scheduler.get_job(id)
+                    if job:
+                        print(f"Removing job {id} for post {post.id}")
+                        scheduler.remove_job(
+                            id
+                        )
+                elif _type == "cron":
+                    id = f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
+                    job = scheduler.get_job(id)
+                    if job:
+                        print(f"Removing job {id} for post {post.id}")
+                        scheduler.remove_job(
+                            f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
+                        )
+            except ValueError as e:
+                print(f"Error parsing time frame '{time_frame}': {e}")
+
+
 def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
     post_schedule = post.post_schedule
     _date = None
@@ -122,7 +149,7 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                 scheduler.add_job(
                     job_func,
                     args=[post.id],
-                    id=f"{post.user_id}_{post.id}_{index}_interval",
+                    id=f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval",
                     trigger=IntervalTrigger(
                         start_date=_date,
                         **params,
@@ -133,7 +160,7 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                 scheduler.add_job(
                     job_func,
                     args=[post.id],
-                    id=f"{post.user_id}_{post.id}_{index}cron",
+                    id=f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron",
                     trigger=CronTrigger(
                         start_date=_date,
                         **params,

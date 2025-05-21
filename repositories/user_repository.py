@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from models import Channel, Multiposting, Post, User
 from states.post import PostForm
+from utils.scheduler import remove_job_by_time_interval
 
 from .base import BaseRepository
 
@@ -72,8 +73,11 @@ class UserRepository(BaseRepository):
         existing_multiposting = self.session.execute(
             select(Multiposting).where(Multiposting.user_id == user.id)
         ).scalar()
+        # Update the existing multiposting
         if existing_multiposting:
-            # Update the existing multiposting
+            remove_job_by_time_interval(
+                existing_multiposting.time_frames.split("|"), user.id
+            )
             existing_multiposting.time_frames = "|".join(timeframes)
             self.session.commit()
             return existing_multiposting
