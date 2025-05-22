@@ -5,6 +5,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
+from aiogram.utils.i18n import gettext as _
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot import bot, message_ids_list
@@ -35,7 +36,7 @@ async def set_post_media_handler(
     await state.update_data(media_file_position=callback_data.media_position)
     await state.set_state(PostForm.upload_media)
     await query.message.edit_text(
-        text="⬇️ Отправьте медиафайл",
+        text=_("⬇️ Send a media file"),
         inline_message_id=query.inline_message_id,
         reply_markup=get_back_to_post_keyboard(state_data),
     )
@@ -63,7 +64,7 @@ async def set_post_media_photo_handler(message: Message, state: FSMContext) -> N
 
     if file_size > 5 * 1024 * 1024:
         await message.answer(
-            "⚠️ Размер файла превышает 5 МБ. Пожалуйста, выберите другой файл.",
+            _("⚠️ File size exceeds 5 MB. Please select another file."),
             show_alert=True,
         )
         return
@@ -154,7 +155,7 @@ async def set_post_media_video_handler(message: Message, state: FSMContext) -> N
 
     if file_size > 5 * 1024 * 1024:
         await message.answer(
-            "⚠️ Размер файла превышает 5 МБ. Пожалуйста, выберите другой файл.",
+            _("⚠️ File size exceeds 5 MB. Please select another file."),
             show_alert=True,
         )
         return

@@ -2,6 +2,8 @@ from aiogram import F
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.utils.formatting import BlockQuote, Underline, as_list, as_marked_section
+from aiogram.utils.i18n import gettext as _
+from aiogram.utils.i18n import lazy_gettext as __
 
 from bot import OWNER_ID, bot
 from keyboard.keyboard import get_main_keyboard
@@ -11,21 +13,27 @@ from . import base_router
 
 
 @base_router.message(CommandStart())
-@base_router.message(F.text == "Главное меню")
+@base_router.message(F.text == __("Main menu"))
 async def start_handler(message: Message) -> None:
     content = BlockQuote(
         as_list(
-            as_marked_section("", "Отложенные посты", marker="🕓 "),
-            as_marked_section("", "Зацикленные посты", marker="🔃 "),
-            as_marked_section("", "Мультипостинг в каналы и чаты", marker="📢 "),
+            as_marked_section("", _("Scheduled posts"), marker="🕓 "),
+            as_marked_section("", _("Looped posts"), marker="🔃 "),
             as_marked_section(
-                "", "Мультиредактор отложенных и зацикленных постов", marker="✅ "
+                "", _("Multiposting to channels and chats"), marker="📢 "
             ),
-            as_marked_section("", "Автоподпись постов прямо в канале", marker="✍️ "),
+            as_marked_section(
+                "", _("Multi-editor for scheduled and looped posts"), marker="✅ "
+            ),
+            as_marked_section(
+                "", _("Auto-signature of posts directly in the channel"), marker="✍️ "
+            ),
         )
     )
     await message.answer(
-        f"<b>Бот Автоматизации</b> ведения Telegram Каналов и Чатов \n\n <b>🤖 Бот создает:</b>\n\n{content.as_html()}",
+        _(
+            "<b>Automation Bot</b> for managing Telegram Channels and Chats \n\n <b>🤖 The bot creates:</b>\n\n{content}"
+        ).format(content=content.as_html()),
         reply_markup=get_main_keyboard(),
     )
 

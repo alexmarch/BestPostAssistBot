@@ -3,6 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, TextLink, Underline
+from aiogram.utils.i18n import gettext as _
+from aiogram.utils.i18n import lazy_gettext as __
 
 from keyboard.keyboard import (
     GeneralSettingsButtonData,
@@ -25,20 +27,28 @@ timeframe_example = FSInputFile("assets/timeframe_example.png")
 
 
 @user_router.message(Command("profile"))
-@user_router.message(F.text == "Мой профиль")
+@user_router.message(F.text == __("My profile"))
 async def show_profile_handler(message: Message) -> None:
     user = user_repository.find_by_chat_id(message.from_user.id)
     user_link = TextLink(user.full_name, url=f"https://t.me/{user.username}")
     count_channels = user_repository.count_channels(user)
     count_posts = user_repository.count_posts(user)
     await message.answer(
-        text=f"<b>Имя: {user.full_name}</b>\n<b>ID:<code>{user.chat_id}</code></b>\n<b>Cсылка: {user_link.as_html()}</b>\n\n<b>📣 Каналов/чатов: <code>{count_channels}</code></b>\n<b>👥 Постов: <code>{count_posts}</code></b>",
+        text=_(
+            "<b>Name: {name}</b>\n<b>ID:<code>{id}</code></b>\n<b>Link: {link}</b>\n\n<b>📣 Channels/chats: <code>{channels}</code></b>\n<b>👥 Posts: <code>{posts}</code></b>"
+        ).format(
+            name=user.full_name,
+            id=user.chat_id,
+            link=user_link.as_html(),
+            channels=count_channels,
+            posts=count_posts,
+        ),
         reply_to_message_id=message.message_id,
     )
 
 
 @user_router.message(Command("settings"))
-@user_router.message(F.text == "Настройки")
+@user_router.message(F.text == __("Settings"))
 async def show_settings_handler(
     message: Message,
     state: FSMContext,
@@ -54,7 +64,7 @@ async def show_settings_handler(
     else:
         await state.update_data(time_frames=None, time_frames_active="off")
 
-    title = BlockQuote("⚙️ Настройки:")
+    title = BlockQuote(_("⚙️ Settings:"))
     state_data = await state.get_data()
 
     await message.answer(
@@ -72,7 +82,7 @@ async def show_general_settings_handler(
     state_data = await state.get_data()
 
     if callback_data.action == "back":
-        title = BlockQuote("⚙️ Настройки:")
+        title = BlockQuote(_("⚙️ Settings:"))
         await query.message.edit_text(
             f"{title.as_html()}\n\n",
             reply_markup=get_general_settings_keyboard(state_data),
@@ -83,7 +93,9 @@ async def show_general_settings_handler(
         time_frames = state_data.get("time_frames")
         jobs, stop_jobs = get_all_jobs_by_user_id(time_frames, user.id)
         await query.message.edit_text(
-            f"📋 <b>Задачи публикации постов:</b>\n\n<b>Всего задач: <code>{len(jobs)}</code></b>",
+            _(
+                "📋 <b>Post publishing tasks:</b>\n\n<b>Total tasks: <code>{count}</code></b>"
+            ).format(count=len(jobs)),
             reply_markup=get_post_jobs_keyboard(state_data, jobs),
             inline_message_id=query.inline_message_id,
         )
@@ -109,13 +121,17 @@ async def show_general_settings_handler(
             job_id = jobs[job_index].id
             jobs.pop(job_index)
             await query.message.edit_text(
-                f"✅ Задача публикации поста <code>{job_id}</code> удалена.",
+                _("✅ Post publishing task <code>{job_id}</code> deleted.").format(
+                    job_id=job_id
+                ),
                 reply_markup=get_post_jobs_keyboard(state_data, jobs),
                 inline_message_id=query.inline_message_id,
             )
         else:
             await query.message.edit_text(
-                f"⚠️ Задача публикации поста <code>{job_id}</code> не найдена.",
+                _("⚠️ Post publishing task <code>{job_id}</code> not found.").format(
+                    job_id=job_id
+                ),
                 reply_markup=get_post_jobs_keyboard(state_data, jobs),
                 inline_message_id=query.inline_message_id,
             )
@@ -126,8 +142,10 @@ async def show_general_settings_handler(
         await state.update_data(time_frames=None)
         state_data = await state.get_data()
         await query.message.edit_text(
-            "⏰ Расписание мультипостинга удалено. Теперь посты будут выходить сразу после создания.",
-            eply_markup=get_multiposting_keyboard(state_data),
+            _(
+                "⏰ Multiposting schedule deleted. Now posts will be published immediately after creation."
+            ),
+            reply_markup=get_multiposting_keyboard(state_data),
             inline_message_id=query.inline_message_id,
         )
 
@@ -138,18 +156,30 @@ async def show_general_settings_handler(
         await state.set_state(PostForm.time_frames)
         time_frames = state_data.get("time_frames")
         await query.message.edit_text(
-            f"""
-<b>🗓 Расписание</b>\n
-Здесь можно установить ежедневное расписание постов в режиме мультипостинга, чтобы в дальнейшем планировать публикации всего одним кликом сразу в несколько каналов.\n
-Чтобы задать расписание, отправь время выхода постов в виде списка в любом удобном формате.\n
-🕒 <b>Публикация по времени</b>(отправте время в любом из форматов):\n
-{BlockQuote("12:00 - Опубликуется в 12:00\n12 00 - Опубликуется в 12:00\n1200 - Опубликуется в 12:00\n12 00, 15 00, 18 00 - Опубликуется в 12:00, 15:00, 18:00").as_html()}\n
-🕒 <b>Настройка интервалов выхода постов:</b>\n
-{BlockQuote('30m - Опубликуется каждые 30 минут\n12h - Опубликуется каждые 12часов\n1h 30m - Опубликуется каждый 1 часа 30 минут').as_html()}\n
-⚠️ <b>ВАЖНО!</b> Минимальное время автоповтора/зацикленности 15m (минут)\n
-{ '⏰ <b>Текущее расписание публикации:</b>\n' if time_frames else "" }
-{BlockQuote("\n".join(time_frames)).as_html() if time_frames else ""}\n
-""",
+            _(
+                """
+<b>🗓 Schedule</b>\n
+Here you can set a daily schedule for posts in multiposting mode, so you can plan publications in several channels with one click.\n
+To set a schedule, send the post times as a list in any convenient format.\n
+🕒 <b>Time-based publishing</b> (send time in any of the formats):\n
+{time_examples}\n🕒 <b>Interval-based publishing:</b>\n
+{interval_examples}\n⚠️ <b>IMPORTANT!</b> The minimum auto-repeat/loop interval is 15m (minutes)\n{current_schedule}
+{schedule_block}
+"""
+            ).format(
+                time_examples=BlockQuote(
+                    "12:00 - Will be published at 12:00\n12 00 - Will be published at 12:00\n1200 - Will be published at 12:00\n12 00, 15 00, 18 00 - Will be published at 12:00, 15:00, 18:00"
+                ).as_html(),
+                interval_examples=BlockQuote(
+                    "30m - Will be published every 30 minutes\n12h - Will be published every 12 hours\n1h 30m - Will be published every 1 hour 30 minutes"
+                ).as_html(),
+                current_schedule=(
+                    "⏰ <b>Current publishing schedule:</b>\n" if time_frames else ""
+                ),
+                schedule_block=(
+                    BlockQuote("\n".join(time_frames)).as_html() if time_frames else ""
+                ),
+            ),
             inline_message_id=query.inline_message_id,
             reply_markup=get_multiposting_keyboard(state_data),
         )
@@ -166,7 +196,7 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
     # check if time_frames is empty
     if not time_frames:
         await message.answer(
-            text="⚠️ Пожалуйста, введите хотя бы одно время.",
+            text=_("⚠️ Please enter at least one time."),
             reply_to_message_id=message.message_id,
             reply_markup=get_multiposting_keyboard(state_data),
         )
@@ -180,7 +210,7 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
             time_frames_list.append(time_interval)
         except Exception as e:
             await message.answer(
-                text="⚠️ Ошибка формата времяни, повторите ввод.",
+                text=_("⚠️ Time format error, please try again."),
                 reply_to_message_id=message.message_id,
                 reply_markup=get_multiposting_keyboard(state_data),
             )
@@ -190,10 +220,12 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
     await state.update_data(time_frames=time_frames_list)
     state_data = await state.get_data()
     await message.answer(
-        f"""
-        ⏰ <b>Текущее расписание публикации:</b>
-        {BlockQuote("\n".join(time_frames_list)).as_html()}
-        """,
+        _(
+            """
+        ⏰ <b>Current publishing schedule:</b>
+        {schedule}
+        """
+        ).format(schedule=BlockQuote("\n".join(time_frames_list)).as_html()),
         reply_to_message_id=message.message_id,
         reply_markup=get_multiposting_keyboard(state_data),
     )
