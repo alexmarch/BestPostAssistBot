@@ -30,6 +30,7 @@ async def start_handler(message: Message) -> None:
     )
 
     user = user_repository.find_by_chat_id(message.from_user.id)
+
     if not user:
         # todo: get timezone from url parameter
         timezone = "UTC"

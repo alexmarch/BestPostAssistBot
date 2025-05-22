@@ -9,7 +9,7 @@ from . import Base, association_table
 
 class Post(Base):
     __tablename__ = "posts"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     recipient_report_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)
     recipient_post_chat_id: Mapped[int] = mapped_column(Integer, nullable=True)

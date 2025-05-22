@@ -10,13 +10,13 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-    Channel,
-    MediaFile,
-    Post,
-    PostKeyboard,
-    PostReactioButton,
-    PostSchedule,
-    User,
+  Channel,
+  MediaFile,
+  Post,
+  PostKeyboard,
+  PostReactioButton,
+  PostSchedule,
+  User,
 )
 
 from .base import BaseRepository
@@ -171,7 +171,7 @@ class PostRepository(BaseRepository):
                                 else False
                             ),
                         )
-                        if callback is not None:
+                        if callback is not None and remove_datetime:
                             callback(
                                 post,
                                 channel.chat_id,
@@ -359,6 +359,7 @@ class PostRepository(BaseRepository):
             if date_frames_confirm:
                 post_schedule = PostSchedule(
                     schedule_date_frames=post_form.get("date_frames"),
+                    stop_schedule_date_frames=post_form.get("stop_schedule_date_frames"),
                     is_active=True,
                     post=post,
                 )

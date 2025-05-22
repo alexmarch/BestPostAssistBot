@@ -6,11 +6,12 @@ from . import Base
 
 class PostSchedule(Base):
     __tablename__ = "posts_schedules"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     post: Mapped["Post"] = relationship(back_populates="post_schedule")
     schedule_time_frames: Mapped[str] = mapped_column(String(100), nullable=True)
     schedule_date_frames: Mapped[str] = mapped_column(String(100), nullable=True)
+    stop_schedule_date_frames: Mapped[str] = mapped_column(String(100), nullable=True)
     created_at: Mapped[str] = mapped_column(
         String(100), server_default=func.now(), nullable=False
     )

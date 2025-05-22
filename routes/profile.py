@@ -5,18 +5,18 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, TextLink, Underline
 
 from keyboard.keyboard import (
-  GeneralSettingsButtonData,
-  get_general_settings_keyboard,
-  get_multiposting_keyboard,
-  get_post_jobs_keyboard,
+    GeneralSettingsButtonData,
+    get_general_settings_keyboard,
+    get_multiposting_keyboard,
+    get_post_jobs_keyboard,
 )
 from repositories import user_repository
 from states.post import PostForm
 from utils.scheduler import (
-  get_all_jobs_by_user_id,
-  parse_time_from_str,
-  remove_job_by_id,
-  remove_job_by_time_interval,
+    get_all_jobs_by_user_id,
+    parse_time_from_str,
+    remove_job_by_id,
+    remove_job_by_time_interval,
 )
 
 from . import user_router
@@ -81,7 +81,7 @@ async def show_general_settings_handler(
 
     if callback_data.action == "show_posting_tasks":
         time_frames = state_data.get("time_frames")
-        jobs = get_all_jobs_by_user_id(time_frames, user.id)
+        jobs, stop_jobs = get_all_jobs_by_user_id(time_frames, user.id)
         await query.message.edit_text(
             f"📋 <b>Задачи публикации постов:</b>\n\n<b>Всего задач: <code>{len(jobs)}</code></b>",
             reply_markup=get_post_jobs_keyboard(state_data, jobs),
@@ -101,8 +101,9 @@ async def show_general_settings_handler(
     if callback_data.action == "delete_post_job":
         time_frames = state_data.get("time_frames")
         job_index = int(callback_data.data)
-        jobs = get_all_jobs_by_user_id(time_frames, user.id)
+        jobs, stop_jobs = get_all_jobs_by_user_id(time_frames, user.id)
         job = remove_job_by_id(jobs[job_index].id)
+        remove_job_by_id(stop_jobs[job_index].id)
         if job:
             # remove element from jobs list
             job_id = jobs[job_index].id

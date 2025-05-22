@@ -3,7 +3,6 @@ from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-    ChatAdministratorRights,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     KeyboardButtonRequestChat,
@@ -319,9 +318,10 @@ def get_post_buttons_keyboard(
 def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
     """Возвращает маркап клавиатуры для подтверждения поста"""
     date_frames_confirm = state_data.get("date_frames_confirm", None)
+    stop_schedule_date_frames = state_data.get("stop_schedule_date_frames", None)
     time_frames = state_data.get("time_frames", [])
     time_frames_active_state = state_data.get("time_frames_active", "off")
-    btn_text = "/".join(time_frames) if time_frames else ""
+    btn_text = ",".join(time_frames) if time_frames else ""
 
     inline_kb_list = [
         [
@@ -335,7 +335,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
         (
             [
                 InlineKeyboardButton(
-                    text=f"📅 {date_frames_confirm}",
+                    text=f"📅 {date_frames_confirm} - {stop_schedule_date_frames}",
                     callback_data=PostButtonData(
                         action="show_next_post_date_calendar",
                         type="post_settings_action",
@@ -348,7 +348,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
         (
             [
                 InlineKeyboardButton(
-                    text=f"{CheckState[time_frames_active_state]}⏰ Пост {btn_text}",
+                    text=f"{CheckState[time_frames_active_state]}⏰ Интервал {btn_text}",
                     callback_data=PostButtonData(
                         action="active_multiposting_timeframe",
                         type="post_settings_action",
@@ -562,6 +562,32 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
                 text="‹ Назад",
                 callback_data=GeneralSettingsButtonData(
                     action="back", type="general_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def get_next_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
+    """
+    Возвращает маркап клавиатуры для выбора даты
+    """
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text="Далее ›",
+                callback_data=PostButtonData(
+                    action="show_stop_schedule_date_frames", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="‹ Назад",
+                callback_data=PostButtonData(
+                    action="back", type="post_settings_action"
                 ).pack(),
             )
         ],

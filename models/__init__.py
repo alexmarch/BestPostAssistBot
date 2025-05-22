@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy import Column, ForeignKey, Table, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -13,7 +15,11 @@ association_table = Table(
     Column("channel_id", ForeignKey("posts_channels.id")),
 )
 
-engine = create_engine("sqlite:///database.db", echo=False)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "mysql+pymysql://vanileuser:vanilepass@mariadb/vaniledb"
+)
+
+engine = create_engine(DATABASE_URL, echo=False)
 Session = sessionmaker(engine)
 
 

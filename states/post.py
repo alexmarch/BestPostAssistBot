@@ -14,6 +14,7 @@ class PostForm(StatesGroup):
     time_frames = State()
     time_frames_active = "on"
     date_frames = State()
+    stop_schedule_date_frames = State()
     date_frames_confirm = State()
     buttons = State()
     reactions = State()

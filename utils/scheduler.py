@@ -79,12 +79,24 @@ def parse_time_from_str(time_str: str) -> str:
         raise ValueError("Invalid time format")
 
 
+async def stop_job(user_id: int, post_id: int, hour: int, minute: int, _type: str):
+    try:
+        job_id = f"{user_id}_{post_id}_{hour}_{minute}_{_type}"
+        remove_job_by_id(job_id)
+    except:
+        pass
+
+    stop_job_id = f"{user_id}_{post_id}_{hour}_{minute}_{_type}_stop_job"
+    remove_job_by_id(stop_job_id)
+
+
 async def job_func(post_id: int):
     await post_repository.send_post(post_id, True, create_remove_post_jod)
 
 
-async def job_func_remove(post_id: int, chat_id: str, message_id: int):
+async def job_func_remove(user_id: int, post_id: int, chat_id: str, message_id: int):
     await post_repository.remove_post(post_id, chat_id, message_id)
+    remove_job_by_id(f"{user_id}_{post_id}_{chat_id}_{message_id}_remove")
 
 
 def create_remove_post_jod(
@@ -96,7 +108,7 @@ def create_remove_post_jod(
     print(f"Create job Removing post {post.id} in chat {chat_id} at {datetime}")
     scheduler.add_job(
         job_func_remove,
-        args=[post.id, chat_id, message_id],
+        args=[post.user_id, post.id, chat_id, message_id],
         id=f"{post.user_id}_{post.id}_{chat_id}_{message_id}_remove",
         trigger=DateTrigger(
             run_date=datetime,
@@ -109,13 +121,16 @@ def remove_job_by_id(job_id: str) -> bool:
     """
     Remove a job by its ID.
     """
-    job = scheduler.get_job(job_id)
-    if job:
-        print(f"Removing job {job_id}")
-        scheduler.remove_job(job_id)
-        return True
-    else:
-        print(f"Job {job_id} not found")
+    try:
+        job = scheduler.get_job(job_id)
+        if job:
+            print(f"Removing job {job_id}")
+            scheduler.remove_job(job_id)
+            return True
+        else:
+            print(f"Job {job_id} not found")
+    except:
+        pass
 
     return False
 
@@ -153,24 +168,33 @@ def get_all_jobs_by_user_id(time_frames: list[str], user_id: int) -> list:
     # user_multiposting = user_repository.get_multiposting_by_id(user_id)
     user_multiposting = None
     jobs = []
+    stop_jobs = []
     for post in posts:
         for time_frame in time_frames:
             try:
                 _type, params = parse_schedule_string(time_frame)
-                print(f"Parsed duration: {_type}, {params} minutes")
                 if _type == "interval":
                     id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval"
+                    stop_job_id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval_stop_job"
                     job = scheduler.get_job(id)
+                    stop_job = scheduler.get_job(stop_job_id)
                     if job:
                         jobs.append(job)
+                    if stop_job:
+                        stop_jobs.append(stop_job)
                 elif _type == "cron":
                     id = f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
+                    stop_job_id = f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron_stop_job"
+                    stop_job = scheduler.get_job(stop_job_id)
                     job = scheduler.get_job(id)
                     if job:
                         jobs.append(job)
+                    if stop_job:
+                        stop_jobs.append(stop_job)
             except ValueError as e:
                 print(f"Error parsing time frame '{time_frame}': {e}")
-    return jobs
+
+    return jobs, stop_jobs
 
 
 def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
@@ -181,11 +205,14 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
         _date = datetime.datetime.strptime(
             post_schedule.schedule_date_frames, "%d/%m/%Y"
         )
+        stop_date = datetime.datetime.strptime(
+            post_schedule.stop_schedule_date_frames, "%d/%m/%Y"
+        )
     index = 0
     for time_frame in time_frames:
         try:
             _type, params = parse_schedule_string(time_frame)
-            print(f"Parsed duration: {_type}, {params} minutes")
+
             if _type == "interval":
                 scheduler.add_job(
                     job_func,
@@ -205,6 +232,31 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                     trigger=CronTrigger(
                         start_date=_date,
                         **params,
+                    ),
+                    replace_existing=True,
+                )
+
+            if stop_date:
+                hour = params.get("hour", None)
+                if not hour:
+                    hour = params.get("hours", None)
+
+                minute = params.get("minute", None)
+                if not minute:
+                    minute = params.get("minutes", None)
+
+                scheduler.add_job(
+                    stop_job,
+                    args=[
+                        post.user_id,
+                        post.id,
+                        hour,
+                        minute,
+                        _type,
+                    ],
+                    id=f"{post.user_id}_{post.id}_{hour}_{minute}_{_type}_stop_job",
+                    trigger=DateTrigger(
+                        run_date=stop_date,
                     ),
                     replace_existing=True,
                 )

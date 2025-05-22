@@ -1,3 +1,4 @@
+import datetime
 from typing import Any
 
 from aiogram import F, html
@@ -27,6 +28,7 @@ from keyboard.keyboard import (
     get_confirm_calendar_keyboard,
     get_confirm_post_keyboard,
     get_created_post_keyboard,
+    get_next_calendar_keyboard,
     get_post_buttons_keyboard,
     get_post_publish_settings_keyboard,
     get_reaction_buttons_keyboard,
@@ -382,7 +384,7 @@ async def process_dialog_calendar(
     if selected:
         await callback_query.message.answer(
             f'You selected {date.strftime("%d/%m/%Y")}',
-            reply_markup=get_confirm_calendar_keyboard(state_data),
+            reply_markup=get_next_calendar_keyboard(state_data),
         )
 
 
@@ -399,11 +401,21 @@ async def process_simple_calendar(
     )
 
     if selected:
-        await state.update_data(
-            {
-                "date_frames": date.strftime("%d/%m/%Y"),
-            }
-        )
+        _state = await state.get_state()
+
+        if _state == PostForm.stop_schedule_date_frames:
+            await state.update_data(
+                {
+                    "stop_schedule_date_frames": date.strftime("%d/%m/%Y"),
+                }
+            )
+        else:
+            await state.update_data(
+                {
+                    "date_frames": date.strftime("%d/%m/%Y"),
+                }
+            )
+
         state_data = await state.get_data()
         builder = InlineKeyboardBuilder()
         builder.attach(
@@ -411,14 +423,27 @@ async def process_simple_calendar(
                 await simplecalendar.start_calendar(
                     year=date.year,
                     month=date.month,
+                    start_day=date.day,
                 )
             )
         )
-        builder.attach(
-            InlineKeyboardBuilder.from_markup(get_confirm_calendar_keyboard(state_data))
-        )
+        if _state == PostForm.stop_schedule_date_frames:
+            message = f'Укажите дату в календаре, с которой следует приостановить публикации: {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}\n\n'
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    get_confirm_calendar_keyboard(state_data)
+                )
+            )
+        else:
+            message = f'Укажите дату в календаре для отложенного поста: {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}\n\n'
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    get_next_calendar_keyboard(state_data)
+                )
+            )
+
         await callback_query.message.edit_text(
-            f'<b>Дата:</b>\n {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}',
+            text=message,
             inline_message_id=callback_query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
@@ -495,6 +520,8 @@ async def set_post_settings_action_handler(
             time_frames = state_data.get("time_frames")
             time_frames_active = state_data.get("time_frames_active")
             date_frames_confirm = state_data.get("date_frames_confirm")
+            stop_schedule_date_frames = state_data.get("stop_schedule_date_frames")
+
             if not time_frames or time_frames_active == "off":
                 result = await post_repository.send_post(
                     post.id, True, create_remove_post_jod
@@ -514,10 +541,11 @@ async def set_post_settings_action_handler(
                 multiposting = BlockQuote("\n".join(time_frames)).as_html()
 
                 if date_frames_confirm:
-                    multiposting = f"<b>📅 Дата публикации:</b>\n {BlockQuote(date_frames_confirm).as_html()}\n {multiposting}\n"
+
+                    multiposting = f"<b>📅 Дата публикации:</b>\n{BlockQuote(date_frames_confirm + '-' + stop_schedule_date_frames).as_html()}\n\n<b>🕒 Интервал:</b>\n{multiposting}\n"
 
                 await query.message.answer(
-                    text=f"✅ <b>Публикация завершена.</b>\n\n {multiposting}\n\n Вы получите уведомление о публикации поста.\n\n",
+                    text=f"✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n",
                     reply_markup=get_back_to_post_keyboard(state_data),
                 )
 
@@ -657,16 +685,61 @@ async def set_post_settings_action_handler(
             state_data=state_data,
         )
 
-    if callback_data.action == "show_next_post_date_calendar":
+    if callback_data.action == "show_stop_schedule_date_frames":
+        await state.set_state(PostForm.stop_schedule_date_frames)
+        state_data = await state.get_data()
         builder = InlineKeyboardBuilder()
+        date_frames = state_data.get("stop_schedule_date_frames")
+        if date_frames:
+            date = datetime.datetime.strptime(
+                date_frames,
+                "%d/%m/%Y",
+            )
+        else:
+            date = datetime.datetime.now()
         builder.attach(
-            InlineKeyboardBuilder.from_markup(await simplecalendar.start_calendar())
+            InlineKeyboardBuilder.from_markup(
+                await simplecalendar.start_calendar(
+                    year=date.year,
+                    month=date.month,
+                    start_day=date.day,
+                )
+            )
         )
         builder.attach(
             InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
         )
         await query.message.edit_text(
-            text="📅 Выберите дату в календаре для отложенного поста\n\n",
+            text=f"{BlockQuote('📅 Укажите дату в календаре, с которой следует приостановить публикации').as_html()}\n\n",
+            inline_message_id=query.inline_message_id,
+            reply_markup=builder.as_markup(),
+        )
+
+    if callback_data.action == "show_next_post_date_calendar":
+        await state.set_state(PostForm.date_frames)
+        builder = InlineKeyboardBuilder()
+        date_frames = state_data.get("date_frames")
+        if date_frames:
+            date = datetime.datetime.strptime(
+                date_frames,
+                "%d/%m/%Y",
+            )
+        else:
+            date = datetime.datetime.now()
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(
+                await simplecalendar.start_calendar(
+                    year=date.year,
+                    month=date.month,
+                    start_day=date.day,
+                )
+            )
+        )
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
+        )
+        await query.message.edit_text(
+            text="📅 Укажите дату в календаре для отложенного поста\n\n",
             inline_message_id=query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
