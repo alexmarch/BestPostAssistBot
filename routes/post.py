@@ -10,13 +10,7 @@ from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.i18n import gettext as _
 from aiogram.utils.i18n import lazy_gettext as __
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram_calendar import (
-    DialogCalendar,
-    DialogCalendarCallback,
-    SimpleCalendar,
-    SimpleCalendarCallback,
-    get_user_locale,
-)
+from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback, get_user_locale
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
@@ -370,21 +364,6 @@ async def channel_check_action_handler(
     await query.message.edit_reply_markup(
         inline_message_id=query.inline_message_id, reply_markup=reply_markup
     )
-
-
-# @post_router.callback_query(DialogCalendarCallback.filter())
-# async def process_dialog_calendar(
-#     callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
-# ):
-#     state_data = await state.get_data()
-#     selected, date = await DialogCalendar(locale="uk_UA.UTF-8").process_selection(
-#         callback_query, callback_data
-#     )
-#     if selected:
-#         await callback_query.message.answer(
-#             f'You selected {date.strftime("%d/%m/%Y")}',
-#             reply_markup=get_next_calendar_keyboard(state_data),
-#         )
 
 
 @post_router.callback_query(SimpleCalendarCallback.filter())
