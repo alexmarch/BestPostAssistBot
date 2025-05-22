@@ -1,0 +1,272 @@
+# Russian translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-05-23 02:34+0300\n"
+"PO-Revision-Date: 2025-05-23 02:35+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ru\n"
+"Language-Team: ru <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: routes/base.py:20
+msgid "Scheduled posts"
+msgstr "Отложенные посты"
+
+#: routes/base.py:21
+msgid "Looped posts"
+msgstr "Зацикленные посты"
+
+#: routes/base.py:23
+msgid "Multiposting to channels and chats"
+msgstr "Мультипостинг в каналы и чаты"
+
+#: routes/base.py:26
+msgid "Multi-editor for scheduled and looped posts"
+msgstr "Мультиредактор отложенных и зацикленных постов"
+
+#: routes/base.py:29
+msgid "Auto-signature of posts directly in the channel"
+msgstr "Автоподпись постов прямо в канале"
+
+#: routes/base.py:35
+#, python-brace-format
+msgid "<b>Automation Bot</b> for managing Telegram Channels and Chats \n\n <b>🤖 The bot creates:</b>\n\n{content}"
+msgstr "<b>Бот Автоматизации</b> ведения Telegram Каналов и Чатов \n\n <b>🤖 Бот создает:</b>\n\n{content}"
+
+#: routes/media.py:39
+msgid "⬇️ Send a media file"
+msgstr "⬇️ Отправьте медиафайл"
+
+#: routes/media.py:67 routes/media.py:158
+msgid "⚠️ File size exceeds 5 MB. Please select another file."
+msgstr "⚠️ Размер файла превышает 5 МБ. Пожалуйста, выберите другой файл."
+
+#: routes/post.py:129
+msgid "Sending messages"
+msgstr "Отправка сообщений"
+
+#: routes/post.py:130
+msgid "Deleting messages"
+msgstr "Удаление сообщений"
+
+#: routes/post.py:131
+msgid "Editing messages"
+msgstr "Изменение сообщений"
+
+#: routes/post.py:132
+msgid "Invite links"
+msgstr "Пригласительные ссылки"
+
+#: routes/post.py:137
+msgid "To connect the bot, assign it as an Administrator in the desired channel/chat, granting the following permissions:"
+msgstr "Для подключения бота назначьте его Администратором в нужный вам канал/чат, выдав следующие права:"
+
+#: routes/post.py:141
+msgid "Then forward a post from your channel/chat here and you can start creating posts ✈️"
+msgstr "Затем перешлите пост из вашего канала/чата прямо сюда и можно создавать посты ✈️"
+
+#: routes/post.py:156
+msgid "⬇️ Send the post you want to edit here"
+msgstr "⬇️ Отправьте сюда пост, который хотите изменить"
+
+#: routes/post.py:173
+msgid "⚠️ Post not found. Please send a valid post."
+msgstr "⚠️ Пост не найден. Отправьте корректный пост."
+
+#: routes/post.py:211
+msgid "⬇️ Create or forward the post you need"
+msgstr "⬇️ Создайте или перешлите нужный вам пост"
+
+#: routes/post.py:289 routes/post.py:322
+msgid "⚠️ User not found. Please enter a valid client ID/username"
+msgstr "⚠️ Пользователь не найден. Введите корректный ID/юзернейм клиента"
+
+#: routes/post.py:301 routes/post.py:334
+msgid "✅ Client successfully added"
+msgstr "✅ Клиент успешно добавлен"
+
+#: routes/post.py:348
+msgid "⚠️ Please select channels/chats first!"
+msgstr "⚠️ Сначала выберите каналы/чаты!"
+
+#: routes/post.py:412
+#, python-brace-format
+msgid "Specify the date in the calendar from which to pause publications: {date}"
+msgstr "Укажите дату в календаре, с которой следует приостановить публикации: {date}"
+
+#: routes/post.py:424
+#, python-brace-format
+msgid "Specify the date in the calendar for the scheduled post: {date}"
+msgstr "Укажите дату в календаре для отложенного поста: {date}"
+
+#: routes/post.py:458
+msgid "🚀 <b>CONFIRM</b> post publication."
+msgstr "🚀 <b>ПОДТВЕРДИТЕ</b> публикацию поста."
+
+#: routes/post.py:464 routes/post.py:469
+msgid "🌟 Available only with a paid subscription!"
+msgstr "🌟 Доступно только в платной подписке!"
+
+#: routes/post.py:474
+msgid "ℹ️ For the report to be delivered, your client must start the bot."
+msgstr "ℹ️ Чтобы отчёт был доставлен, ваш клиент должен запустить бота."
+
+#: routes/post.py:477
+#, python-brace-format
+msgid "⬆️ <b>Report to client</b>\n\nSend the client's username here, if not available send their ID or forward a message from the client.\n\n{info_message}\n\n"
+msgstr "⬆️ <b>Отчёт клиенту</b>\n\nОтправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n{info_message}\n\n"
+
+#: routes/post.py:491
+msgid "ℹ️ For the post copy to be delivered, your client must start the bot."
+msgstr "ℹ️ Чтобы копия поста была доставлена, ваш клиент должен запустить бота."
+
+#: routes/post.py:494
+#, python-brace-format
+msgid "⬆️ <b>Copy of post</b>\n\nSend the client's username here, if not available send their ID or forward a message from the client.\n\n{info_message}\n\n"
+msgstr "⬆️ <b>Копия поста</b>\n\nОтправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n{info_message}\n\n"
+
+#: routes/post.py:512
+msgid "✅ Post published successfully!"
+msgstr "✅ Пост успешно опубликован!"
+
+#: routes/post.py:529
+#, python-brace-format
+msgid "✅ <b>Sending completed.</b>\n\n📨 Delivered {sended}/{total}:\n\n{channels}\n\n"
+msgstr "✅ <b>Отправка завершена.</b>\n\n📨 Доставлено {sended}/{total}:\n\n{channels}\n\n"
+
+#: routes/post.py:545
+#, python-brace-format
+msgid "<b>📅 Publication date:</b>\n{date}\n\n<b>🕒 Interval:</b>\n{interval}\n"
+msgstr "<b>📅 Дата публикации:</b>\n{date}\n\n<b>🕒 Интервал:</b>\n{interval}\n"
+
+#: routes/post.py:555
+#, python-brace-format
+msgid "✅ <b>Publication completed.</b>\n\n{multiposting}\n\n🔔 <b>ATTENTION!</b> You will receive a notification about the post publication.\n\n"
+msgstr "✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n"
+
+#: routes/post.py:580
+msgid "Media position (🔼 Top with preview | 🆙 Top without preview | 🔽 Bottom with preview)"
+msgstr "Положение медиа (🔼 Вверх с превью | 🆙 Вверх без превью | 🔽 Вниз с превью)"
+
+#: routes/post.py:599
+msgid "✅ Media file deleted!"
+msgstr "✅ Медиафайл удален!"
+
+#: routes/post.py:631
+msgid "⬇️ Send the new post text"
+msgstr "⬇️ Отправьте новый текст поста"
+
+#: routes/post.py:642
+msgid "🏷 Select channels/chats for publication"
+msgstr "🏷 Выберите каналы/чаты для публикации"
+
+#: routes/post.py:679
+msgid "⚠️ Please confirm the selection of channels/chats!"
+msgstr "⚠️ Подтвердите выбор каналов/чатов!"
+
+#: routes/post.py:685
+msgid "➡️ Publication settings menu for the post"
+msgstr "➡️ Меню настроек публикаций для поста"
+
+#: routes/post.py:753
+msgid "📅 Specify the date in the calendar for the scheduled post\n\n"
+msgstr "📅 Укажите дату в календаре для отложенного поста\n\n"
+
+#: routes/post.py:768
+#, python-brace-format
+msgid "<b>📅 Publication date:</b>\n {date}"
+msgstr "<b>📅 Дата публикации:</b>\n {date}"
+
+#: routes/post.py:775
+msgid "⚠️ Select a publication date!"
+msgstr "⚠️ Выберите дату публикации!"
+
+#: routes/post.py:782
+#, python-brace-format
+msgid "<b>⬇️ Send buttons in the format:</b>\n\n{example}\n\nButtons can be separated by the `|` symbol for columns in a row:\n{columns_example}\n\n"
+msgstr "<b>⬇️ Отправьте кнопки в формате:</b>\n\n{example}\n\nКнопки могут быть разделены символом `|` для столбцов в строке:\n{columns_example}\n\n"
+
+#: routes/post.py:798
+#, python-brace-format
+msgid "<b>⬇️ Send reactions in the format:</b>\n {emoji_example}\n\n <b>Or in text format:</b> {text_example}"
+msgstr "<b>⬇️ Отправьте реакции в формате:</b>\n {emoji_example}\n\n <b>Либо в текстовом формате:</b> {text_example}"
+
+#: routes/post.py:810
+msgid "🗑️ Select the interval after which the post will be deleted"
+msgstr "🗑️ Выберите интервал через сколько пост будет удален"
+
+#: routes/post.py:869
+#, python-brace-format
+msgid "Channel/chat already added:\n\n{title}"
+msgstr "Канал/чат уже добавлен:\n\n{title}"
+
+#: routes/post.py:879
+#, python-brace-format
+msgid "You have selected the channel:\n\n{title}"
+msgstr "Вы выбрали канал:\n\n{title}"
+
+#: routes/post.py:908
+msgid "⚠️ Error adding reactions. Please try again."
+msgstr "⚠️ Ошибка при добавлении реакций. Попробуйте еще раз."
+
+#: routes/post.py:959
+msgid "⚠️ Error adding buttons. Please try again."
+msgstr "⚠️ Ошибка при добавлении кнопок. Попробуйте еще раз."
+
+#: routes/profile.py:38
+#, python-brace-format
+msgid "<b>Name: {name}</b>\n<b>ID:<code>{id}</code></b>\n<b>Link: {link}</b>\n\n<b>📣 Channels/chats: <code>{channels}</code></b>\n<b>👥 Posts: <code>{posts}</code></b>"
+msgstr "<b>Имя: {name}</b>\n<b>ID:<code>{id}</code></b>\n<b>Cсылка: {link}</b>\n\n<b>📣 Каналов/чатов: <code>{channels}</code></b>\n<b>👥 Постов: <code>{posts}</code></b>"
+
+#: routes/profile.py:67 routes/profile.py:85
+msgid "⚙️ Settings:"
+msgstr "⚙️ Настройки:"
+
+#: routes/profile.py:97
+#, python-brace-format
+msgid "📋 <b>Post publishing tasks:</b>\n\n<b>Total tasks: <code>{count}</code></b>"
+msgstr "📋 <b>Задачи публикации постов:</b>\n\n<b>Всего задач: <code>{count}</code></b>"
+
+#: routes/profile.py:124
+#, python-brace-format
+msgid "✅ Post publishing task <code>{job_id}</code> deleted."
+msgstr "✅ Задача публикации поста <code>{job_id}</code> удалена."
+
+#: routes/profile.py:132
+#, python-brace-format
+msgid "⚠️ Post publishing task <code>{job_id}</code> not found."
+msgstr "⚠️ Задача публикации поста <code>{job_id}</code> не найдена."
+
+#: routes/profile.py:146
+msgid "⏰ Multiposting schedule deleted. Now posts will be published immediately after creation."
+msgstr "⏰ Расписание мультипостинга удалено. Теперь посты будут выходить сразу после создания."
+
+#: routes/profile.py:160
+#, python-brace-format
+msgid "\n<b>🗓 Schedule</b>\n\nHere you can set a daily schedule for posts in multiposting mode, so you can plan publications in several channels with one click.\n\nTo set a schedule, send the post times as a list in any convenient format.\n\n🕒 <b>Time-based publishing</b> (send time in any of the formats):\n\n{time_examples}\n🕒 <b>Interval-based publishing:</b>\n\n{interval_examples}\n⚠️ <b>IMPORTANT!</b> The minimum auto-repeat/loop interval is 15m (minutes)\n{current_schedule}\n{schedule_block}\n"
+msgstr "\n<b>🗓 Расписание</b>\n\nЗдесь можно установить ежедневное расписание постов в режиме мультипостинга, чтобы в дальнейшем планировать публикации всего одним кликом сразу в несколько каналов.\n\nЧтобы задать расписание, отправь время выхода постов в виде списка в любом удобном формате.\n\n🕒 <b>Публикация по времени</b>(отправте время в любом из форматов):\n\n{time_examples}\n🕒 <b>Настройка интервалов выхода постов:</b>\n\n{interval_examples}\n⚠️ <b>ВАЖНО!</b> Минимальное время автоповтора/зацикленности 15m (минут)\n{current_schedule}\n{schedule_block}\n"
+
+#: routes/profile.py:199
+msgid "⚠️ Please enter at least one time."
+msgstr "⚠️ Пожалуйста, введите хотя бы одно время."
+
+#: routes/profile.py:213
+msgid "⚠️ Time format error, please try again."
+msgstr "⚠️ Ошибка формата времени, повторите ввод."
+
+#: routes/profile.py:224
+#, python-brace-format
+msgid "\n        ⏰ <b>Current publishing schedule:</b>\n        {schedule}\n        "
+msgstr "\n        ⏰ <b>Текущее расписание публикации:</b>\n        {schedule}\n        "
+
