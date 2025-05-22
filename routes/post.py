@@ -126,19 +126,19 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
 async def add_channel_handler(message: Message) -> None:
     content = BlockQuote(
         as_list(
-            as_marked_section("", _("Отправка сообщений"), marker="✅ "),
-            as_marked_section("", _("Удаление сообщений"), marker="✅ "),
-            as_marked_section("", _("Изменение сообщений"), marker="✅ "),
-            as_marked_section("", _("Пригласительные ссылки"), marker="✅ "),
+            as_marked_section("", _("Sending messages"), marker="✅ "),
+            as_marked_section("", _("Deleting messages"), marker="✅ "),
+            as_marked_section("", _("Editing messages"), marker="✅ "),
+            as_marked_section("", _("Invite links"), marker="✅ "),
         )
     )
     await message.answer(
         _(
-            "Для подключения бота назначьте его Администратором в нужный вам канал/чат, выдав следующие права:"
+            "To connect the bot, assign it as an Administrator in the desired channel/chat, granting the following permissions:"
         )
         + f"\n\n{content.as_html()}\n\n"
         + _(
-            "Затем перешлите пост из вашего канала/чата прямо сюда и можно создавать посты ✈️"
+            "Then forward a post from your channel/chat here and you can start creating posts ✈️"
         ),
         reply_markup=get_chat_channel_keyboard(),
     )
@@ -153,7 +153,7 @@ async def edit_post_handler(message: Message, state: FSMContext) -> None:
     state_data = await state.get_data()
     await state.set_state(PostForm.edit_post)
     await message.answer(
-        text=_("⬇️ Отправьте сюда пост, который хотите изменить"),
+        text=_("⬇️ Send the post you want to edit here"),
         reply_markup=get_back_to_post_keyboard(state_data),
     )
 
@@ -170,7 +170,7 @@ async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
         )
         if not post:
             await message.answer(
-                text="⚠️ Пост не найден. Отправьте корректный пост.",
+                text=_("⚠️ Post not found. Please send a valid post."),
                 reply_markup=get_back_to_post_keyboard(state_data),
             )
             return
@@ -204,11 +204,11 @@ async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
 @post_router.message(F.text == __("Создать пост"))
 async def create_post_handler(message: Message, state: FSMContext) -> None:
     """
-    Обработчик создания поста
+    Handler for creating a post
     """
     await state.clear()
     await state.set_state(PostForm.text)
-    msg1 = await message.answer(_("⬇️ Создайте или перешлите нужный вам пост"))
+    msg1 = await message.answer(_("⬇️ Create or forward the post you need"))
     message_ids_list.append(msg1.message_id)
 
 
@@ -286,7 +286,7 @@ async def create_post_recipient_report_chat_id_handler(
 
     if not user:
         await message.answer(
-            text=_("⚠️ Пользователь не найден. Введите корректный ID/юзернейм клиента"),
+            text=_("⚠️ User not found. Please enter a valid client ID/username"),
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         return
@@ -298,7 +298,7 @@ async def create_post_recipient_report_chat_id_handler(
     )
 
     await message.answer(
-        text=_("✅ Клиент успешно добавлен"),
+        text=_("✅ Client successfully added"),
         reply_markup=get_back_to_post_keyboard(state_data),
     )
 
@@ -319,7 +319,7 @@ async def create_post_recipient_post_chat_id_handler(
 
     if not user:
         await message.answer(
-            text=_("⚠️ Пользователь не найден. Введите корректный ID/юзернейм клиента"),
+            text=_("⚠️ User not found. Please enter a valid client ID/username"),
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         return
@@ -331,7 +331,7 @@ async def create_post_recipient_post_chat_id_handler(
     )
 
     await message.answer(
-        text=_("✅ Клиент успешно добавлен"),
+        text=_("✅ Client successfully added"),
         reply_markup=get_back_to_post_keyboard(state_data),
     )
 
@@ -344,7 +344,9 @@ async def channel_check_action_handler(
     channel_list = state_data.get("chat_channel_list")
 
     if not channel_list:
-        await query.answer(text=_("⚠️ Сначала выберите каналы/чаты!"), show_alert=True)
+        await query.answer(
+            text=_("⚠️ Please select channels/chats first!"), show_alert=True
+        )
         return
 
     channels = list(filter(lambda c: c["id"] == callback_data.channel_id, channel_list))
@@ -407,7 +409,7 @@ async def process_simple_calendar(
         if _state == PostForm.stop_schedule_date_frames:
             message = (
                 _(
-                    "Укажите дату в календаре, с которой следует приостановить публикации: {date}"
+                    "Specify the date in the calendar from which to pause publications: {date}"
                 ).format(date=BlockQuote(date.strftime("%d/%m/%Y")).as_html())
                 + "\n\n"
             )
@@ -418,9 +420,9 @@ async def process_simple_calendar(
             )
         else:
             message = (
-                _("Укажите дату в календаре для отложенного поста: {date}").format(
-                    date=BlockQuote(date.strftime("%d/%m/%Y")).as_html()
-                )
+                _(
+                    "Specify the date in the calendar for the scheduled post: {date}"
+                ).format(date=BlockQuote(date.strftime("%d/%m/%Y")).as_html())
                 + "\n\n"
             )
             builder.attach(
@@ -441,7 +443,7 @@ async def set_post_settings_action_handler(
     query: CallbackQuery, state: FSMContext, callback_data: PostButtonData
 ) -> None:
     """
-    Обработчик действий с постами
+    Handler for post settings actions
     """
     user = user_repository.find_by_chat_id(query.from_user.id)
     state_data = await state.get_data()
@@ -453,27 +455,27 @@ async def set_post_settings_action_handler(
         state_data = await state.get_data()
 
         await query.message.answer(
-            text=_("🚀 <b>ПОДТВЕРДИТЕ</b> публикацию поста."),
+            text=_("🚀 <b>CONFIRM</b> post publication."),
             reply_markup=get_confirm_post_keyboard(state_data),
         )
 
     if callback_data.action == "ai_integration":
         await query.answer(
-            text=_("🌟 Доступно только в платной подписке!"), show_alert=True
+            text=_("🌟 Available only with a paid subscription!"), show_alert=True
         )
 
     if callback_data.action == "crm_integration":
         await query.answer(
-            text=_("🌟 Доступно только в платной подписке!"), show_alert=True
+            text=_("🌟 Available only with a paid subscription!"), show_alert=True
         )
 
     if callback_data.action == "show_send_report":
         info_message = BlockQuote(
-            _("ℹ️ Чтобы отчёт был доставлен, ваш клиент должен запустить бота.")
+            _("ℹ️ For the report to be delivered, your client must start the bot.")
         )
         message = _(
-            "⬆️ <b>Отчёт клиенту</b>\n\n"
-            "Отправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n"
+            "⬆️ <b>Report to client</b>\n\n"
+            "Send the client's username here, if not available send their ID or forward a message from the client.\n\n"
             "{info_message}\n\n"
         ).format(info_message=info_message.as_html())
         await query.message.edit_text(
@@ -486,11 +488,11 @@ async def set_post_settings_action_handler(
 
     if callback_data.action == "show_send_copy_post":
         info_message = BlockQuote(
-            _("ℹ️ Чтобы копия поста была доставлена, ваш клиент должен запустить бота.")
+            _("ℹ️ For the post copy to be delivered, your client must start the bot.")
         )
         message = _(
-            "⬆️ <b>Копия поста</b>\n\n"
-            "Отправьте сюда юзернейм клиента, если его нет то отправьте его ID или перешлите сообщение от имени клиента.\n\n"
+            "⬆️ <b>Copy of post</b>\n\n"
+            "Send the client's username here, if not available send their ID or forward a message from the client.\n\n"
             "{info_message}\n\n"
         ).format(info_message=info_message.as_html())
         await query.message.edit_text(
@@ -506,7 +508,9 @@ async def set_post_settings_action_handler(
 
         if post:
             await clear_message_ids(query.message)
-            await query.answer(text=_("✅ Пост успешно опубликован!"), show_alert=True)
+            await query.answer(
+                text=_("✅ Post published successfully!"), show_alert=True
+            )
             time_frames = state_data.get("time_frames")
             time_frames_active = state_data.get("time_frames_active")
             date_frames_confirm = state_data.get("date_frames_confirm")
@@ -522,7 +526,7 @@ async def set_post_settings_action_handler(
                         channels += f"{html.blockquote(html.code(channel.title + '/' + channel.type))}\n"
                     await query.message.answer(
                         text=_(
-                            "✅ <b>Отправка завершена.</b>\n\n📨 Доставлено {sended}/{total}:\n\n{channels}\n\n"
+                            "✅ <b>Sending completed.</b>\n\n📨 Delivered {sended}/{total}:\n\n{channels}\n\n"
                         ).format(
                             sended=result["sended_channels"],
                             total=result["total_channels"],
@@ -538,7 +542,7 @@ async def set_post_settings_action_handler(
 
                 if date_frames_confirm:
                     multiposting = _(
-                        "<b>📅 Дата публикации:</b>\n{date}\n\n<b>🕒 Интервал:</b>\n{interval}\n"
+                        "<b>📅 Publication date:</b>\n{date}\n\n<b>🕒 Interval:</b>\n{interval}\n"
                     ).format(
                         date=BlockQuote(
                             f"{date_frames_confirm}-{stop_schedule_date_frames}"
@@ -548,7 +552,7 @@ async def set_post_settings_action_handler(
 
                 await query.message.answer(
                     text=_(
-                        "✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n"
+                        "✅ <b>Publication completed.</b>\n\n{multiposting}\n\n🔔 <b>ATTENTION!</b> You will receive a notification about the post publication.\n\n"
                     ).format(multiposting=multiposting),
                     reply_markup=get_back_to_post_keyboard(state_data),
                 )
@@ -572,7 +576,9 @@ async def set_post_settings_action_handler(
         state_data = await state.get_data()
         await clear_message_ids(query.message)
         await query.message.answer(
-            text="Положение медиа (🔼 Вверх с превью | 🆙 Вверх без превью | 🔽 Вниз с превью)",
+            text=_(
+                "Media position (🔼 Top with preview | 🆙 Top without preview | 🔽 Bottom with preview)"
+            ),
             reply_markup=get_add_media_keyboard(state_data),
         )
 
@@ -590,7 +596,7 @@ async def set_post_settings_action_handler(
                     "media_file_type": None,
                 }
             )
-            await query.answer(text=f"✅ Медиафайл удален!", show_alert=True)
+            await query.answer(text=_("✅ Media file deleted!"), show_alert=True)
 
         state_data = await state.get_data()
         await answer_with_post(
@@ -622,7 +628,7 @@ async def set_post_settings_action_handler(
         # удаляем старый текст
         await clear_message_ids(query.message)
         msg1 = await query.message.answer(
-            text="⬇️ Отправьте новый текст поста",
+            text=_("⬇️ Send the new post text"),
             inline_message_id=query.inline_message_id,
             reply_markup=get_back_to_post_keyboard(state_data),
         )
@@ -633,7 +639,7 @@ async def set_post_settings_action_handler(
         reply_markup = get_channel_list_keyboard(state_data)
         await clear_message_ids(query.message)
         await query.message.answer(
-            text="🏷 Выберите каналы/чаты для публикации",
+            text=_("🏷 Select channels/chats for publication"),
             inline_message_id=query.inline_message_id,
             reply_markup=reply_markup,
         )
@@ -670,12 +676,13 @@ async def set_post_settings_action_handler(
         if not is_confirm:
             # Сообщение об ошибке
             await query.answer(
-                text=f"⚠️ Подтвердите выбор каналов/чатов!", show_alert=True
+                text=_("⚠️ Please confirm the selection of channels/chats!"),
+                show_alert=True,
             )
         else:
             await clear_message_ids(query.message)
             await query.message.answer(
-                text=f"➡️ Меню настроек публикаций для поста",
+                text=_("➡️ Publication settings menu for the post"),
                 inline_message_id=query.inline_message_id,
                 reply_markup=get_post_publish_settings_keyboard(state_data),
             )
@@ -714,7 +721,7 @@ async def set_post_settings_action_handler(
             InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
         )
         await query.message.edit_text(
-            text=f"{BlockQuote('📅 Укажите дату в календаре, с которой следует приостановить публикации').as_html()}\n\n",
+            text=f"{BlockQuote('📅 Specify the date in the calendar from which to pause publications').as_html()}\n\n",
             inline_message_id=query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
@@ -743,7 +750,7 @@ async def set_post_settings_action_handler(
             InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
         )
         await query.message.edit_text(
-            text=_("📅 Укажите дату в календаре для отложенного поста\n\n"),
+            text=_("📅 Specify the date in the calendar for the scheduled post\n\n"),
             inline_message_id=query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
@@ -758,25 +765,25 @@ async def set_post_settings_action_handler(
                 }
             )
             await query.message.edit_text(
-                text=_("<b>📅 Дата публикации:</b>\n {date}").format(
+                text=_("<b>📅 Publication date:</b>\n {date}").format(
                     date=BlockQuote(date_frames).as_html()
                 ),
                 inline_message_id=query.inline_message_id,
                 reply_markup=get_post_publish_settings_keyboard(state_data),
             )
         else:
-            await query.answer(text=_("⚠️ Выберите дату публикации!"), show_alert=True)
+            await query.answer(text=_("⚠️ Select a publication date!"), show_alert=True)
 
     if callback_data.action == "add_buttons":
         state_data = await state.get_data()
         await clear_message_ids(query.message)
         await query.message.answer(
             text=_(
-                "<b>⬇️ Отправьте кнопки в формате:</b>\n\n{example}\n\nКнопки могут быть разделены символом `|` для столбцов в строке:\n{columns_example}\n\n"
+                "<b>⬇️ Send buttons in the format:</b>\n\n{example}\n\nButtons can be separated by the `|` symbol for columns in a row:\n{columns_example}\n\n"
             ).format(
-                example=BlockQuote("Название - Ссылка").as_html(),
+                example=BlockQuote("Name - Link").as_html(),
                 columns_example=BlockQuote(
-                    "Название - Ссылка|Название - Ссылка\n\n Результат: 2 кнопки в столбик"
+                    "Name - Link|Name - Link\n\n Result: 2 buttons in a column"
                 ).as_html(),
             ),
             reply_markup=get_back_to_post_keyboard(state_data),
@@ -788,10 +795,10 @@ async def set_post_settings_action_handler(
         await clear_message_ids(query.message)
         await query.message.answer(
             text=_(
-                "<b>⬇️ Отправьте реакции в формате:</b>\n {emoji_example}\n\n <b>Либо в текстовом формате:</b> {text_example}"
+                "<b>⬇️ Send reactions in the format:</b>\n {emoji_example}\n\n <b>Or in text format:</b> {text_example}"
             ).format(
                 emoji_example=BlockQuote("❤️/👍/😁/🤔/🤬").as_html(),
-                text_example=BlockQuote("Да/Нет/Не знаю").as_html(),
+                text_example=BlockQuote("Yes/No/Don't know").as_html(),
             ),
             reply_markup=get_back_to_post_keyboard(state_data),
         )
@@ -800,7 +807,7 @@ async def set_post_settings_action_handler(
     if callback_data.action == "show_remove_time":
         state_data = await state.get_data()
         await query.message.edit_text(
-            text=_("🗑️ Выберите интервал через сколько пост будет удален"),
+            text=_("🗑️ Select the interval after which the post will be deleted"),
             reply_markup=get_remove_post_interval_keyboard(state_data),
             inline_message_id=query.inline_message_id,
         )
@@ -859,7 +866,7 @@ async def handle_request_chat(message: Message) -> None:
             )
             if channel:
                 await message.answer(
-                    _("Канал/чат уже добавлен:\n\n{title}").format(
+                    _("Channel/chat already added:\n\n{title}").format(
                         title=html.blockquote(channel.title)
                     )
                 )
@@ -869,7 +876,7 @@ async def handle_request_chat(message: Message) -> None:
                 user, str(chat_info.chat_id), chat_info.title, type
             )
             await message.answer(
-                _("Вы выбрали канал:\n\n{title}").format(
+                _("You have selected the channel:\n\n{title}").format(
                     title=html.blockquote(chat_info.title)
                 )
             )
@@ -898,7 +905,7 @@ async def create_post_reactions_handler(message: Message, state: FSMContext) -> 
         )
     except Exception as e:
         await message.answer(
-            text=_("⚠️ Ошибка при добавлении реакций. Попробуйте еще раз."),
+            text=_("⚠️ Error adding reactions. Please try again."),
             reply_markup=get_back_to_post_keyboard(state_data),
         )
         print(e)
@@ -949,7 +956,7 @@ async def create_post_buttons_handler(message: Message, state: FSMContext) -> No
         )
     except Exception as e:
         await message.answer(
-            text=_("⚠️ Ошибка при добавлении кнопок. Попробуйте еще раз."),
+            text=_("⚠️ Error adding buttons. Please try again."),
             reply_markup=get_back_to_post_keyboard(state_data),
         )
 
