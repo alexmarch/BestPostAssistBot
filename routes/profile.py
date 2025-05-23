@@ -23,8 +23,6 @@ from utils.scheduler import (
 
 from . import user_router
 
-timeframe_example = FSInputFile("assets/timeframe_example.png")
-
 
 @user_router.message(Command("profile"))
 @user_router.message(F.text == __("My profile"))
