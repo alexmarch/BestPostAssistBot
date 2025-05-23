@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-05-23 02:34+0300\n"
+"POT-Creation-Date: 2025-05-23 03:15+0300\n"
 "PO-Revision-Date: 2025-05-23 02:42+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: uk\n"
@@ -18,6 +18,168 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
+
+#: keyboard/keyboard.py:23
+msgid "Add channel/chat"
+msgstr "Додати канал/чат"
+
+#: keyboard/keyboard.py:24
+msgid "Create post"
+msgstr "Створити пост"
+
+#: keyboard/keyboard.py:25
+msgid "Settings"
+msgstr "Налаштування"
+
+#: keyboard/keyboard.py:26
+msgid "Edit post"
+msgstr "Редагувати пост"
+
+#: keyboard/keyboard.py:29
+msgid "My profile"
+msgstr "Мій профіль"
+
+#: keyboard/keyboard.py:33 keyboard/keyboard.py:806
+msgid "Channel"
+msgstr "Канал"
+
+#: keyboard/keyboard.py:34 keyboard/keyboard.py:816
+msgid "Chat"
+msgstr "Чат"
+
+#: keyboard/keyboard.py:35
+msgid "Main menu"
+msgstr "Головне меню"
+
+#: keyboard/keyboard.py:40
+msgid "📝 Edit text"
+msgstr "📝 Редагувати текст"
+
+#: keyboard/keyboard.py:45 keyboard/keyboard.py:768
+msgid "📎 Add media"
+msgstr "📎 Додати медіа"
+
+#: keyboard/keyboard.py:50 keyboard/keyboard.py:782
+msgid "🎛️ Add buttons"
+msgstr "🎛️ Додати кнопки"
+
+#: keyboard/keyboard.py:55 keyboard/keyboard.py:775
+msgid "😊 Add reactions"
+msgstr "😊 Додати реакції"
+
+#: keyboard/keyboard.py:59
+msgid "Sound 🔊"
+msgstr "Звук 🔊"
+
+#: keyboard/keyboard.py:60
+msgid "Comments 💬"
+msgstr "Коментарі 💬"
+
+#: keyboard/keyboard.py:61
+msgid "Pin 📌"
+msgstr "Закріпити 📌"
+
+#: keyboard/keyboard.py:62
+msgid "Auto-signature ✍️"
+msgstr "Автопідпис ✍️"
+
+#: keyboard/keyboard.py:64
+msgid "‹ Channels/chats"
+msgstr "‹ Канали/чати"
+
+#: keyboard/keyboard.py:68 keyboard/keyboard.py:577
+msgid "Next ›"
+msgstr "Далі ›"
+
+#: keyboard/keyboard.py:334 keyboard/keyboard.py:603
+msgid "✅⚡️ Confirm"
+msgstr "✅⚡️ Підтвердити"
+
+#: keyboard/keyboard.py:368
+msgid "Change post time"
+msgstr "Змінити час поста"
+
+#: keyboard/keyboard.py:376 keyboard/keyboard.py:410 keyboard/keyboard.py:427
+#: keyboard/keyboard.py:496 keyboard/keyboard.py:548
+msgid "‹ Back to post"
+msgstr "‹ Назад до поста"
+
+#: keyboard/keyboard.py:394
+msgid "🔼 Top with preview"
+msgstr "🔼 Вгору з прев'ю"
+
+#: keyboard/keyboard.py:402
+msgid "🔽 Bottom with preview"
+msgstr "🔽 Вниз з прев'ю"
+
+#: keyboard/keyboard.py:464 keyboard/keyboard.py:559 keyboard/keyboard.py:585
+#: keyboard/keyboard.py:611 keyboard/keyboard.py:697 keyboard/keyboard.py:750
+msgid "‹ Back"
+msgstr "‹ Назад"
+
+#: keyboard/keyboard.py:479
+msgid "📅 Multiposting schedule"
+msgstr "📅 Розклад мультипостингу"
+
+#: keyboard/keyboard.py:487
+msgid "🗒️ Posting task log"
+msgstr "🗒️ Журнал завдань публікації"
+
+#: keyboard/keyboard.py:515
+msgid "Off"
+msgstr "Вимкнено"
+
+#: keyboard/keyboard.py:515
+msgid "On"
+msgstr "Увімкнено"
+
+#: keyboard/keyboard.py:645
+msgid "💼 Report to client"
+msgstr "💼 Звіт клієнту"
+
+#: keyboard/keyboard.py:651
+msgid "➡️ Forward"
+msgstr "➡️ Переслати"
+
+#: keyboard/keyboard.py:659
+msgid "📅 Schedule"
+msgstr "📅 Розклад"
+
+#: keyboard/keyboard.py:665
+msgid "🚀 Publish"
+msgstr "🚀 Опублікувати"
+
+#: keyboard/keyboard.py:673
+msgid "🕒 Delete timer"
+msgstr "🕒 Видалити таймер"
+
+#: keyboard/keyboard.py:681
+msgid "🤖 AI integration"
+msgstr "🤖 Інтеграція ШІ"
+
+#: keyboard/keyboard.py:689
+msgid "📊 CRM integration"
+msgstr "📊 Інтеграція CRM"
+
+#: keyboard/keyboard.py:716
+msgid "✓ Select all"
+msgstr "✓ Вибрати все"
+
+#: keyboard/keyboard.py:729
+msgid "⚡ CONFIRM"
+msgstr "⚡ ПІДТВЕРДИТИ"
+
+#: keyboard/keyboard.py:765
+msgid "🗑️ Delete media"
+msgstr "🗑️ Видалити медіа"
+
+#: keyboard/keyboard.py:772
+msgid "🗑️ Delete reactions"
+msgstr "🗑️ Видалити реакції"
+
+#: keyboard/keyboard.py:779
+msgid "🗑️ Delete buttons"
+msgstr "🗑️ Видалити кнопки"
 
 #: routes/base.py:20
 msgid "Scheduled posts"
@@ -41,8 +203,18 @@ msgstr "Автопідпис постів прямо в каналі"
 
 #: routes/base.py:35
 #, python-brace-format
-msgid "<b>Automation Bot</b> for managing Telegram Channels and Chats \n\n <b>🤖 The bot creates:</b>\n\n{content}"
-msgstr "<b>Бот автоматизації</b> ведення Telegram каналів і чатів \n\n <b>🤖 Бот створює:</b>\n\n{content}"
+msgid ""
+"<b>Automation Bot</b> for managing Telegram Channels and Chats \n"
+"\n"
+" <b>🤖 The bot creates:</b>\n"
+"\n"
+"{content}"
+msgstr ""
+"<b>Бот автоматизації</b> ведення Telegram каналів і чатів \n"
+"\n"
+" <b>🤖 Бот створює:</b>\n"
+"\n"
+"{content}"
 
 #: routes/media.py:39
 msgid "⬇️ Send a media file"
@@ -69,12 +241,20 @@ msgid "Invite links"
 msgstr "Запрошувальні посилання"
 
 #: routes/post.py:137
-msgid "To connect the bot, assign it as an Administrator in the desired channel/chat, granting the following permissions:"
-msgstr "Щоб підключити бота, призначте його адміністратором у потрібному вам каналі/чаті, надавши такі права:"
+msgid ""
+"To connect the bot, assign it as an Administrator in the desired "
+"channel/chat, granting the following permissions:"
+msgstr ""
+"Щоб підключити бота, призначте його адміністратором у потрібному вам "
+"каналі/чаті, надавши такі права:"
 
 #: routes/post.py:141
-msgid "Then forward a post from your channel/chat here and you can start creating posts ✈️"
-msgstr "Потім перешліть пост із вашого каналу/чату сюди і можна створювати пости ✈️"
+msgid ""
+"Then forward a post from your channel/chat here and you can start "
+"creating posts ✈️"
+msgstr ""
+"Потім перешліть пост із вашого каналу/чату сюди і можна створювати пости "
+"✈️"
 
 #: routes/post.py:156
 msgid "⬇️ Send the post you want to edit here"
@@ -124,8 +304,22 @@ msgstr "ℹ️ Щоб звіт був доставлений, ваш клієн�
 
 #: routes/post.py:477
 #, python-brace-format
-msgid "⬆️ <b>Report to client</b>\n\nSend the client's username here, if not available send their ID or forward a message from the client.\n\n{info_message}\n\n"
-msgstr "⬆️ <b>Звіт клієнту</b>\n\nНадішліть сюди юзернейм клієнта, якщо його немає, то надішліть його ID або перешліть повідомлення від імені клієнта.\n\n{info_message}\n\n"
+msgid ""
+"⬆️ <b>Report to client</b>\n"
+"\n"
+"Send the client's username here, if not available send their ID or "
+"forward a message from the client.\n"
+"\n"
+"{info_message}\n"
+"\n"
+msgstr ""
+"⬆️ <b>Звіт клієнту</b>\n"
+"\n"
+"Надішліть сюди юзернейм клієнта, якщо його немає, то надішліть його ID "
+"або перешліть повідомлення від імені клієнта.\n"
+"\n"
+"{info_message}\n"
+"\n"
 
 #: routes/post.py:491
 msgid "ℹ️ For the post copy to be delivered, your client must start the bot."
@@ -133,8 +327,22 @@ msgstr "ℹ️ Щоб копія поста була доставлена, ва�
 
 #: routes/post.py:494
 #, python-brace-format
-msgid "⬆️ <b>Copy of post</b>\n\nSend the client's username here, if not available send their ID or forward a message from the client.\n\n{info_message}\n\n"
-msgstr "⬆️ <b>Копія поста</b>\n\nНадішліть сюди юзернейм клієнта, якщо його немає, то надішліть його ID або перешліть повідомлення від імені клієнта.\n\n{info_message}\n\n"
+msgid ""
+"⬆️ <b>Copy of post</b>\n"
+"\n"
+"Send the client's username here, if not available send their ID or "
+"forward a message from the client.\n"
+"\n"
+"{info_message}\n"
+"\n"
+msgstr ""
+"⬆️ <b>Копія поста</b>\n"
+"\n"
+"Надішліть сюди юзернейм клієнта, якщо його немає, то надішліть його ID "
+"або перешліть повідомлення від імені клієнта.\n"
+"\n"
+"{info_message}\n"
+"\n"
 
 #: routes/post.py:512
 msgid "✅ Post published successfully!"
@@ -142,21 +350,58 @@ msgstr "✅ Пост успішно опубліковано!"
 
 #: routes/post.py:529
 #, python-brace-format
-msgid "✅ <b>Sending completed.</b>\n\n📨 Delivered {sended}/{total}:\n\n{channels}\n\n"
-msgstr "✅ <b>Відправлення завершено.</b>\n\n📨 Доставлено {sended}/{total}:\n\n{channels}\n\n"
+msgid ""
+"✅ <b>Sending completed.</b>\n"
+"\n"
+"📨 Delivered {sended}/{total}:\n"
+"\n"
+"{channels}\n"
+"\n"
+msgstr ""
+"✅ <b>Відправлення завершено.</b>\n"
+"\n"
+"📨 Доставлено {sended}/{total}:\n"
+"\n"
+"{channels}\n"
+"\n"
 
 #: routes/post.py:545
 #, python-brace-format
-msgid "<b>📅 Publication date:</b>\n{date}\n\n<b>🕒 Interval:</b>\n{interval}\n"
-msgstr "<b>📅 Дата публікації:</b>\n{date}\n\n<b>🕒 Інтервал:</b>\n{interval}\n"
+msgid ""
+"<b>📅 Publication date:</b>\n"
+"{date}\n"
+"\n"
+"<b>🕒 Interval:</b>\n"
+"{interval}\n"
+msgstr ""
+"<b>📅 Дата публікації:</b>\n"
+"{date}\n"
+"\n"
+"<b>🕒 Інтервал:</b>\n"
+"{interval}\n"
 
 #: routes/post.py:555
 #, python-brace-format
-msgid "✅ <b>Publication completed.</b>\n\n{multiposting}\n\n🔔 <b>ATTENTION!</b> You will receive a notification about the post publication.\n\n"
-msgstr "✅ <b>Публікацію завершено.</b>\n\n{multiposting}\n\n🔔 <b>УВАГА!</b> Ви отримаєте сповіщення про публікацію поста.\n\n"
+msgid ""
+"✅ <b>Publication completed.</b>\n"
+"\n"
+"{multiposting}\n"
+"\n"
+"🔔 <b>ATTENTION!</b> You will receive a notification about the post "
+"publication.\n"
+"\n"
+msgstr ""
+"✅ <b>Публікацію завершено.</b>\n"
+"\n"
+"{multiposting}\n"
+"\n"
+"🔔 <b>УВАГА!</b> Ви отримаєте сповіщення про публікацію поста.\n"
+"\n"
 
 #: routes/post.py:580
-msgid "Media position (🔼 Top with preview | 🆙 Top without preview | 🔽 Bottom with preview)"
+msgid ""
+"Media position (🔼 Top with preview | 🆙 Top without preview | 🔽 Bottom "
+"with preview)"
 msgstr "Положення медіа (🔼 Вгору з прев'ю | 🆙 Вгору без прев'ю | 🔽 Вниз з прев'ю)"
 
 #: routes/post.py:599
@@ -180,13 +425,21 @@ msgid "➡️ Publication settings menu for the post"
 msgstr "➡️ Меню налаштувань публікації для поста"
 
 #: routes/post.py:753
-msgid "📅 Specify the date in the calendar for the scheduled post\n\n"
-msgstr "📅 Вкажіть дату в календарі для відкладеного поста\n\n"
+msgid ""
+"📅 Specify the date in the calendar for the scheduled post\n"
+"\n"
+msgstr ""
+"📅 Вкажіть дату в календарі для відкладеного поста\n"
+"\n"
 
 #: routes/post.py:768
 #, python-brace-format
-msgid "<b>📅 Publication date:</b>\n {date}"
-msgstr "<b>📅 Дата публікації:</b>\n {date}"
+msgid ""
+"<b>📅 Publication date:</b>\n"
+" {date}"
+msgstr ""
+"<b>📅 Дата публікації:</b>\n"
+" {date}"
 
 #: routes/post.py:775
 msgid "⚠️ Select a publication date!"
@@ -194,13 +447,35 @@ msgstr "⚠️ Виберіть дату публікації!"
 
 #: routes/post.py:782
 #, python-brace-format
-msgid "<b>⬇️ Send buttons in the format:</b>\n\n{example}\n\nButtons can be separated by the `|` symbol for columns in a row:\n{columns_example}\n\n"
-msgstr "<b>⬇️ Надішліть кнопки у форматі:</b>\n\n{example}\n\nКнопки можуть бути розділені символом `|` для стовпців у рядку:\n{columns_example}\n\n"
+msgid ""
+"<b>⬇️ Send buttons in the format:</b>\n"
+"\n"
+"{example}\n"
+"\n"
+"Buttons can be separated by the `|` symbol for columns in a row:\n"
+"{columns_example}\n"
+"\n"
+msgstr ""
+"<b>⬇️ Надішліть кнопки у форматі:</b>\n"
+"\n"
+"{example}\n"
+"\n"
+"Кнопки можуть бути розділені символом `|` для стовпців у рядку:\n"
+"{columns_example}\n"
+"\n"
 
 #: routes/post.py:798
 #, python-brace-format
-msgid "<b>⬇️ Send reactions in the format:</b>\n {emoji_example}\n\n <b>Or in text format:</b> {text_example}"
-msgstr "<b>⬇️ Надішліть реакції у форматі:</b>\n {emoji_example}\n\n <b>Або у текстовому форматі:</b> {text_example}"
+msgid ""
+"<b>⬇️ Send reactions in the format:</b>\n"
+" {emoji_example}\n"
+"\n"
+" <b>Or in text format:</b> {text_example}"
+msgstr ""
+"<b>⬇️ Надішліть реакції у форматі:</b>\n"
+" {emoji_example}\n"
+"\n"
+" <b>Або у текстовому форматі:</b> {text_example}"
 
 #: routes/post.py:810
 msgid "🗑️ Select the interval after which the post will be deleted"
@@ -208,13 +483,25 @@ msgstr "🗑️ Виберіть інтервал, через який пост 
 
 #: routes/post.py:869
 #, python-brace-format
-msgid "Channel/chat already added:\n\n{title}"
-msgstr "Канал/чат вже додано:\n\n{title}"
+msgid ""
+"Channel/chat already added:\n"
+"\n"
+"{title}"
+msgstr ""
+"Канал/чат вже додано:\n"
+"\n"
+"{title}"
 
 #: routes/post.py:879
 #, python-brace-format
-msgid "You have selected the channel:\n\n{title}"
-msgstr "Ви вибрали канал:\n\n{title}"
+msgid ""
+"You have selected the channel:\n"
+"\n"
+"{title}"
+msgstr ""
+"Ви вибрали канал:\n"
+"\n"
+"{title}"
 
 #: routes/post.py:908
 msgid "⚠️ Error adding reactions. Please try again."
@@ -226,8 +513,20 @@ msgstr "⚠️ Помилка при додаванні кнопок. Спроб
 
 #: routes/profile.py:38
 #, python-brace-format
-msgid "<b>Name: {name}</b>\n<b>ID:<code>{id}</code></b>\n<b>Link: {link}</b>\n\n<b>📣 Channels/chats: <code>{channels}</code></b>\n<b>👥 Posts: <code>{posts}</code></b>"
-msgstr "<b>Ім'я: {name}</b>\n<b>ID:<code>{id}</code></b>\n<b>Посилання: {link}</b>\n\n<b>📣 Каналів/чатів: <code>{channels}</code></b>\n<b>👥 Постів: <code>{posts}</code></b>"
+msgid ""
+"<b>Name: {name}</b>\n"
+"<b>ID:<code>{id}</code></b>\n"
+"<b>Link: {link}</b>\n"
+"\n"
+"<b>📣 Channels/chats: <code>{channels}</code></b>\n"
+"<b>👥 Posts: <code>{posts}</code></b>"
+msgstr ""
+"<b>Ім'я: {name}</b>\n"
+"<b>ID:<code>{id}</code></b>\n"
+"<b>Посилання: {link}</b>\n"
+"\n"
+"<b>📣 Каналів/чатів: <code>{channels}</code></b>\n"
+"<b>👥 Постів: <code>{posts}</code></b>"
 
 #: routes/profile.py:67 routes/profile.py:85
 msgid "⚙️ Settings:"
@@ -235,8 +534,14 @@ msgstr "⚙️ Налаштування:"
 
 #: routes/profile.py:97
 #, python-brace-format
-msgid "📋 <b>Post publishing tasks:</b>\n\n<b>Total tasks: <code>{count}</code></b>"
-msgstr "📋 <b>Завдання публікації постів:</b>\n\n<b>Всього завдань: <code>{count}</code></b>"
+msgid ""
+"📋 <b>Post publishing tasks:</b>\n"
+"\n"
+"<b>Total tasks: <code>{count}</code></b>"
+msgstr ""
+"📋 <b>Завдання публікації постів:</b>\n"
+"\n"
+"<b>Всього завдань: <code>{count}</code></b>"
 
 #: routes/profile.py:124
 #, python-brace-format
@@ -249,13 +554,54 @@ msgid "⚠️ Post publishing task <code>{job_id}</code> not found."
 msgstr "⚠️ Завдання публікації поста <code>{job_id}</code> не знайдено."
 
 #: routes/profile.py:146
-msgid "⏰ Multiposting schedule deleted. Now posts will be published immediately after creation."
-msgstr "⏰ Розклад мультипостингу видалено. Тепер пости будуть виходити одразу після створення."
+msgid ""
+"⏰ Multiposting schedule deleted. Now posts will be published immediately "
+"after creation."
+msgstr ""
+"⏰ Розклад мультипостингу видалено. Тепер пости будуть виходити одразу "
+"після створення."
 
 #: routes/profile.py:160
 #, python-brace-format
-msgid "\n<b>🗓 Schedule</b>\n\nHere you can set a daily schedule for posts in multiposting mode, so you can plan publications in several channels with one click.\n\nTo set a schedule, send the post times as a list in any convenient format.\n\n🕒 <b>Time-based publishing</b> (send time in any of the formats):\n\n{time_examples}\n🕒 <b>Interval-based publishing:</b>\n\n{interval_examples}\n⚠️ <b>IMPORTANT!</b> The minimum auto-repeat/loop interval is 15m (minutes)\n{current_schedule}\n{schedule_block}\n"
-msgstr "\n<b>🗓 Розклад</b>\n\nТут можна встановити щоденний розклад постів у режимі мультипостингу, щоб надалі планувати публікації одним кліком одразу в кілька каналів.\n\nЩоб задати розклад, надішліть час виходу постів у вигляді списку у будь-якому зручному форматі.\n\n🕒 <b>Публікація за часом</b> (надішліть час у будь-якому з форматів):\n\n{time_examples}\n🕒 <b>Налаштування інтервалів виходу постів:</b>\n\n{interval_examples}\n⚠️ <b>ВАЖЛИВО!</b> Мінімальний час автоповтору/зацикленості 15m (хвилин)\n{current_schedule}\n{schedule_block}\n"
+msgid ""
+"\n"
+"<b>🗓 Schedule</b>\n"
+"\n"
+"Here you can set a daily schedule for posts in multiposting mode, so you "
+"can plan publications in several channels with one click.\n"
+"\n"
+"To set a schedule, send the post times as a list in any convenient "
+"format.\n"
+"\n"
+"🕒 <b>Time-based publishing</b> (send time in any of the formats):\n"
+"\n"
+"{time_examples}\n"
+"🕒 <b>Interval-based publishing:</b>\n"
+"\n"
+"{interval_examples}\n"
+"⚠️ <b>IMPORTANT!</b> The minimum auto-repeat/loop interval is 15m "
+"(minutes)\n"
+"{current_schedule}\n"
+"{schedule_block}\n"
+msgstr ""
+"\n"
+"<b>🗓 Розклад</b>\n"
+"\n"
+"Тут можна встановити щоденний розклад постів у режимі мультипостингу, щоб"
+" надалі планувати публікації одним кліком одразу в кілька каналів.\n"
+"\n"
+"Щоб задати розклад, надішліть час виходу постів у вигляді списку у "
+"будь-якому зручному форматі.\n"
+"\n"
+"🕒 <b>Публікація за часом</b> (надішліть час у будь-якому з форматів):\n"
+"\n"
+"{time_examples}\n"
+"🕒 <b>Налаштування інтервалів виходу постів:</b>\n"
+"\n"
+"{interval_examples}\n"
+"⚠️ <b>ВАЖЛИВО!</b> Мінімальний час автоповтору/зацикленості 15m (хвилин)\n"
+"{current_schedule}\n"
+"{schedule_block}\n"
 
 #: routes/profile.py:199
 msgid "⚠️ Please enter at least one time."
@@ -267,6 +613,14 @@ msgstr "⚠️ Помилка формату часу, спробуйте ще �
 
 #: routes/profile.py:224
 #, python-brace-format
-msgid "\n        ⏰ <b>Current publishing schedule:</b>\n        {schedule}\n        "
-msgstr "\n        ⏰ <b>Поточний розклад публікації:</b>\n        {schedule}\n        "
+msgid ""
+"\n"
+"        ⏰ <b>Current publishing schedule:</b>\n"
+"        {schedule}\n"
+"        "
+msgstr ""
+"\n"
+"        ⏰ <b>Поточний розклад публікації:</b>\n"
+"        {schedule}\n"
+"        "
 

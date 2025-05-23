@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-05-23 02:34+0300\n"
+"POT-Creation-Date: 2025-05-23 03:15+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,168 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
+
+#: keyboard/keyboard.py:23
+msgid "Add channel/chat"
+msgstr ""
+
+#: keyboard/keyboard.py:24
+msgid "Create post"
+msgstr ""
+
+#: keyboard/keyboard.py:25
+msgid "Settings"
+msgstr ""
+
+#: keyboard/keyboard.py:26
+msgid "Edit post"
+msgstr ""
+
+#: keyboard/keyboard.py:29
+msgid "My profile"
+msgstr ""
+
+#: keyboard/keyboard.py:33 keyboard/keyboard.py:806
+msgid "Channel"
+msgstr ""
+
+#: keyboard/keyboard.py:34 keyboard/keyboard.py:816
+msgid "Chat"
+msgstr ""
+
+#: keyboard/keyboard.py:35
+msgid "Main menu"
+msgstr ""
+
+#: keyboard/keyboard.py:40
+msgid "📝 Edit text"
+msgstr ""
+
+#: keyboard/keyboard.py:45 keyboard/keyboard.py:768
+msgid "📎 Add media"
+msgstr ""
+
+#: keyboard/keyboard.py:50 keyboard/keyboard.py:782
+msgid "🎛️ Add buttons"
+msgstr ""
+
+#: keyboard/keyboard.py:55 keyboard/keyboard.py:775
+msgid "😊 Add reactions"
+msgstr ""
+
+#: keyboard/keyboard.py:59
+msgid "Sound 🔊"
+msgstr ""
+
+#: keyboard/keyboard.py:60
+msgid "Comments 💬"
+msgstr ""
+
+#: keyboard/keyboard.py:61
+msgid "Pin 📌"
+msgstr ""
+
+#: keyboard/keyboard.py:62
+msgid "Auto-signature ✍️"
+msgstr ""
+
+#: keyboard/keyboard.py:64
+msgid "‹ Channels/chats"
+msgstr ""
+
+#: keyboard/keyboard.py:68 keyboard/keyboard.py:577
+msgid "Next ›"
+msgstr ""
+
+#: keyboard/keyboard.py:334 keyboard/keyboard.py:603
+msgid "✅⚡️ Confirm"
+msgstr ""
+
+#: keyboard/keyboard.py:368
+msgid "Change post time"
+msgstr ""
+
+#: keyboard/keyboard.py:376 keyboard/keyboard.py:410 keyboard/keyboard.py:427
+#: keyboard/keyboard.py:496 keyboard/keyboard.py:548
+msgid "‹ Back to post"
+msgstr ""
+
+#: keyboard/keyboard.py:394
+msgid "🔼 Top with preview"
+msgstr ""
+
+#: keyboard/keyboard.py:402
+msgid "🔽 Bottom with preview"
+msgstr ""
+
+#: keyboard/keyboard.py:464 keyboard/keyboard.py:559 keyboard/keyboard.py:585
+#: keyboard/keyboard.py:611 keyboard/keyboard.py:697 keyboard/keyboard.py:750
+msgid "‹ Back"
+msgstr ""
+
+#: keyboard/keyboard.py:479
+msgid "📅 Multiposting schedule"
+msgstr ""
+
+#: keyboard/keyboard.py:487
+msgid "🗒️ Posting task log"
+msgstr ""
+
+#: keyboard/keyboard.py:515
+msgid "Off"
+msgstr ""
+
+#: keyboard/keyboard.py:515
+msgid "On"
+msgstr ""
+
+#: keyboard/keyboard.py:645
+msgid "💼 Report to client"
+msgstr ""
+
+#: keyboard/keyboard.py:651
+msgid "➡️ Forward"
+msgstr ""
+
+#: keyboard/keyboard.py:659
+msgid "📅 Schedule"
+msgstr ""
+
+#: keyboard/keyboard.py:665
+msgid "🚀 Publish"
+msgstr ""
+
+#: keyboard/keyboard.py:673
+msgid "🕒 Delete timer"
+msgstr ""
+
+#: keyboard/keyboard.py:681
+msgid "🤖 AI integration"
+msgstr ""
+
+#: keyboard/keyboard.py:689
+msgid "📊 CRM integration"
+msgstr ""
+
+#: keyboard/keyboard.py:716
+msgid "✓ Select all"
+msgstr ""
+
+#: keyboard/keyboard.py:729
+msgid "⚡ CONFIRM"
+msgstr ""
+
+#: keyboard/keyboard.py:765
+msgid "🗑️ Delete media"
+msgstr ""
+
+#: keyboard/keyboard.py:772
+msgid "🗑️ Delete reactions"
+msgstr ""
+
+#: keyboard/keyboard.py:779
+msgid "🗑️ Delete buttons"
+msgstr ""
 
 #: routes/base.py:20
 msgid "Scheduled posts"

@@ -1,68 +1,67 @@
-from enum import Enum
+# -*- coding: utf-8 -*-
 from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-  InlineKeyboardButton,
-  InlineKeyboardMarkup,
-  KeyboardButtonRequestChat,
-  ReplyKeyboardMarkup,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButtonRequestChat,
+    ReplyKeyboardMarkup,
 )
-from aiogram.utils.i18n import gettext as _
-from aiogram.utils.i18n import lazy_gettext as __
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
+from bot import i18n
 from models.Post import Post
 
 CheckState = {"on": "✅", "off": "☑️"}
 
+_ = i18n.lazy_gettext
+
 main_buttons = [
-    __("Add channel/chat"),
-    __("Create post"),
-    __("Settings"),
-    __("Edit post"),
-    # __("Content plan"),
-    # __("Templates"),
-    __("My profile"),
+    _("Add channel/chat"),
+    _("Create post"),
+    _("Settings"),
+    _("Edit post"),
+    _("My profile"),
 ]
 
 add_chat_channel_buttons = [
-    __("Channel"),
-    __("Chat"),
-    __("Main menu"),
+    _("Channel"),
+    _("Chat"),
+    _("Main menu"),
 ]
 
 post_inline_buttons = [
     {
-        "text": __("📝 Edit text"),
+        "text": _("📝 Edit text"),
         "action": "change_text",
         "type": "post_settings_action",
     },
     {
-        "text": __("📎 Add media"),
+        "text": _("📎 Add media"),
         "action": "add_media",
         "type": "post_settings_action",
     },
     {
-        "text": __("🎛️ Add buttons"),
+        "text": _("🎛️ Add buttons"),
         "action": "add_buttons",
         "type": "post_settings_action",
     },
     {
-        "text": __("😊 Add reactions"),
+        "text": _("😊 Add reactions"),
         "action": "add_reactions",
         "type": "post_settings_action",
     },
-    {"text": __("Sound 🔊"), "action": "sound", "type": "post_settings"},
-    {"text": __("Comments 💬"), "action": "comments", "type": "post_settings"},
-    {"text": __("Pin 📌"), "action": "pin", "type": "post_settings"},
-    {"text": __("Auto-signature ✍️"), "action": "signature", "type": "post_settings"},
+    {"text": _("Sound 🔊"), "action": "sound", "type": "post_settings"},
+    {"text": _("Comments 💬"), "action": "comments", "type": "post_settings"},
+    {"text": _("Pin 📌"), "action": "pin", "type": "post_settings"},
+    {"text": _("Auto-signature ✍️"), "action": "signature", "type": "post_settings"},
     {
-        "text": __("‹ Channels/chats"),
+        "text": _("‹ Channels/chats"),
         "action": "add_chat_channel",
         "type": "post_settings_action",
     },
-    {"text": __("Next ›"), "action": "next", "type": "post_settings_action"},
+    {"text": _("Next ›"), "action": "next", "type": "post_settings_action"},
 ]
 
 
@@ -100,7 +99,7 @@ class ChannelData(CallbackData, prefix="channel"):
 def get_main_keyboard() -> ReplyKeyboardMarkup:
     rkb = ReplyKeyboardBuilder()
     for btn in main_buttons:
-        rkb.button(text=btn)
+        rkb.button(text=str(btn))
     rkb.adjust(2)
     return rkb.as_markup()
 
@@ -328,7 +327,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("✅⚡️ Confirm"),
+                text=_("✅⚡️ Confirm"),
                 callback_data=PostButtonData(
                     action="confirm_create_post", type="post_settings_action"
                 ).pack(),
@@ -362,7 +361,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
         ),
         [
             InlineKeyboardButton(
-                text=__("Change post time"),
+                text=_("Change post time"),
                 callback_data=GeneralSettingsButtonData(
                     action="show_multiposting_timeframe", type="general_settings_action"
                 ).pack(),
@@ -370,7 +369,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
         ],
         [
             InlineKeyboardButton(
-                text=__("‹ Back to post"),
+                text=_("‹ Back to post"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -388,7 +387,7 @@ def get_add_media_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarkup:
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("🔼 Top with preview"),
+                text=_("🔼 Top with preview"),
                 callback_data=PostMediaPositionData(
                     action="add_media", media_position="top_preview"
                 ).pack(),
@@ -396,7 +395,7 @@ def get_add_media_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text=__("🔽 Bottom with preview"),
+                text=_("🔽 Bottom with preview"),
                 callback_data=PostMediaPositionData(
                     action="add_media", media_position="bottom_preview"
                 ).pack(),
@@ -404,7 +403,7 @@ def get_add_media_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text=__("‹ Back to post"),
+                text=_("‹ Back to post"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -421,7 +420,7 @@ def get_back_to_post_keyboard(state_data: Dict[str, Any]) -> InlineKeyboardMarku
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("‹ Back to post"),
+                text=_("‹ Back to post"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -458,7 +457,7 @@ def get_post_jobs_keyboard(data: Dict[str, Any], jobs: list) -> InlineKeyboardMa
     inline_kb_list.append(
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=GeneralSettingsButtonData(
                     action="back", type="general_settings_action"
                 ).pack(),
@@ -473,7 +472,7 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("📅 Multiposting schedule"),
+                text=_("📅 Multiposting schedule"),
                 callback_data=GeneralSettingsButtonData(
                     action="show_multiposting_timeframe", type="general_settings_action"
                 ).pack(),
@@ -481,7 +480,7 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text=__("🗒️ Posting task log"),
+                text=_("🗒️ Posting task log"),
                 callback_data=GeneralSettingsButtonData(
                     action="show_posting_tasks", type="general_settings_action"
                 ).pack(),
@@ -490,7 +489,7 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         (
             [
                 InlineKeyboardButton(
-                    text=__("‹ Back to post"),
+                    text=_("‹ Back to post"),
                     callback_data=PostButtonData(
                         action="back", type="post_settings_action"
                     ).pack(),
@@ -509,7 +508,7 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     """
     time_frames = data.get("time_frames", [])
     time_frames_active_state = data.get("time_frames_active", "off")
-    btn_text = __("Off") if time_frames_active_state == "off" else __("On")
+    btn_text = _("Off") if time_frames_active_state == "off" else _("On")
     text = data.get("text", None)
 
     inline_kb_list = [
@@ -542,7 +541,7 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         (
             [
                 InlineKeyboardButton(
-                    text=__("‹ Back to post"),
+                    text=_("‹ Back to post"),
                     callback_data=PostButtonData(
                         action="back", type="post_settings_action"
                     ).pack(),
@@ -553,7 +552,7 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ),
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=GeneralSettingsButtonData(
                     action="back", type="general_settings_action"
                 ).pack(),
@@ -571,7 +570,7 @@ def get_next_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("Next ›"),
+                text=_("Next ›"),
                 callback_data=PostButtonData(
                     action="show_stop_schedule_date_frames", type="post_settings_action"
                 ).pack(),
@@ -579,7 +578,7 @@ def get_next_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -597,7 +596,7 @@ def get_confirm_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text=__("✅⚡️ Confirm"),
+                text=_("✅⚡️ Confirm"),
                 callback_data=PostButtonData(
                     action="date_frames_confirm", type="post_settings_action"
                 ).pack(),
@@ -605,7 +604,7 @@ def get_confirm_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=PostButtonData(
                     action="show_next_post_date_calendar", type="post_settings_action"
                 ).pack(),
@@ -639,13 +638,13 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         # ],
         [
             InlineKeyboardButton(
-                text=__("💼 Report to client"),
+                text=_("💼 Report to client"),
                 callback_data=PostButtonData(
                     action="show_send_report", type="post_settings_action"
                 ).pack(),
             ),
             InlineKeyboardButton(
-                text=__("➡️ Forward"),
+                text=_("➡️ Forward"),
                 callback_data=PostButtonData(
                     action="show_send_copy_post", type="post_settings_action"
                 ).pack(),
@@ -653,13 +652,13 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=__("📅 Schedule"),
+                text=_("📅 Schedule"),
                 callback_data=PostButtonData(
                     action="show_next_post_date_calendar", type="post_settings_action"
                 ).pack(),
             ),
             InlineKeyboardButton(
-                text=__("🚀 Publish"),
+                text=_("🚀 Publish"),
                 callback_data=PostButtonData(
                     action="publish_post", type="post_settings_action"
                 ).pack(),
@@ -667,7 +666,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=__("🕒 Delete timer"),
+                text=_("🕒 Delete timer"),
                 callback_data=PostButtonData(
                     action="show_remove_time", type="post_settings_action"
                 ).pack(),
@@ -675,7 +674,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=__("🤖 AI integration"),
+                text=_("🤖 AI integration"),
                 callback_data=PostButtonData(
                     action="ai_integration", type="post_settings_action"
                 ).pack(),
@@ -683,7 +682,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=__("📊 CRM integration"),
+                text=_("📊 CRM integration"),
                 callback_data=PostButtonData(
                     action="crm_integration", type="post_settings_action"
                 ).pack(),
@@ -691,7 +690,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -710,7 +709,7 @@ def get_channel_list_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
 
     action_buttons = [
         InlineKeyboardButton(
-            text=__("✓ Select all"),
+            text=_("✓ Select all"),
             callback_data=PostButtonData(
                 action="select_all_channels", type="post_settings_action"
             ).pack(),
@@ -723,7 +722,7 @@ def get_channel_list_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         if channel["checked"] == "on" and len(action_buttons) < 2:
             action_buttons.append(
                 InlineKeyboardButton(
-                    text=__("⚡ CONFIRM"),
+                    text=_("⚡ CONFIRM"),
                     callback_data=PostButtonData(
                         action="confirm", type="post_settings_action"
                     ).pack(),
@@ -744,7 +743,7 @@ def get_channel_list_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
         action_buttons,
         [
             InlineKeyboardButton(
-                text=__("‹ Back"),
+                text=_("‹ Back"),
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
                 ).pack(),
@@ -759,24 +758,24 @@ def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     ikb = InlineKeyboardBuilder()
     for btn in post_inline_buttons:
         if data.get("media_file_name") and btn["action"] == "add_media":
-            btn["text"] = __("🗑️ Delete media")
+            btn["text"] = _("🗑️ Delete media")
             btn["action"] = "remove_media"
         elif btn["action"] == "remove_media" and not data.get("media_file_name"):
-            btn["text"] = __("📎 Add media")
+            btn["text"] = _("📎 Add media")
             btn["action"] = "add_media"
 
         if data.get("reactions") and btn["action"] == "add_reactions":
-            btn["text"] = __("🗑️ Delete reactions")
+            btn["text"] = _("🗑️ Delete reactions")
             btn["action"] = "remove_reactions"
         elif not data.get("reactions") and btn["action"] == "remove_reactions":
-            btn["text"] = __("😊 Add reactions")
+            btn["text"] = _("😊 Add reactions")
             btn["action"] = "add_reactions"
 
         if data.get("buttons") and btn["action"] == "add_buttons":
-            btn["text"] = __("🗑️ Delete buttons")
+            btn["text"] = _("🗑️ Delete buttons")
             btn["action"] = "remove_buttons"
         elif not data.get("buttons") and btn["action"] == "remove_buttons":
-            btn["text"] = __("🎛️ Add buttons")
+            btn["text"] = _("🎛️ Add buttons")
             btn["action"] = "add_buttons"
 
         if btn["action"] == "sound":
@@ -800,9 +799,9 @@ def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
 def get_chat_channel_keyboard() -> ReplyKeyboardMarkup:
     rkb = ReplyKeyboardBuilder()
     for btn in add_chat_channel_buttons:
-        if btn == __("Channel"):
+        if str(btn) == str(_("Channel")):
             rkb.button(
-                text=btn,
+                text=str(btn),
                 request_chat=KeyboardButtonRequestChat(
                     request_id=1,
                     request_title=True,
@@ -810,9 +809,9 @@ def get_chat_channel_keyboard() -> ReplyKeyboardMarkup:
                     bot_is_member=True,
                 ),
             )
-        elif btn == __("Chat"):
+        elif str(btn) == str(_("Chat")):
             rkb.button(
-                text=btn,
+                text=str(btn),
                 request_chat=KeyboardButtonRequestChat(
                     request_id=2,
                     request_title=True,
@@ -821,6 +820,6 @@ def get_chat_channel_keyboard() -> ReplyKeyboardMarkup:
                 ),
             )
         else:
-            rkb.button(text=btn)
+            rkb.button(text=str(btn))
     rkb.adjust(2)
     return rkb.as_markup()
