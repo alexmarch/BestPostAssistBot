@@ -1,10 +1,10 @@
 import datetime
+import os
 import re
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.calendarinterval import CalendarIntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -13,8 +13,10 @@ from models.Post import Post
 
 from . import post_repository
 
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///database.db")
+
 jobstores = {
-    "default": SQLAlchemyJobStore(url="sqlite:///database.db"),
+    "default": SQLAlchemyJobStore(url=DATABASE_URL),
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
