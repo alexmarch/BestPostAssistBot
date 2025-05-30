@@ -1,17 +1,20 @@
 from aiogram import F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, FSInputFile, Message
-from aiogram.utils.formatting import BlockQuote, TextLink, Underline
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.formatting import BlockQuote, TextLink
 
 from keyboard.keyboard import (
     GeneralSettingsButtonData,
+    get_confirm_auto_repeat_keyboard,
     get_general_settings_keyboard,
     get_multiposting_keyboard,
     get_post_jobs_keyboard,
+    get_post_multiposting_keyboard,
 )
 from repositories import user_repository
 from states.post import PostForm
+from utils.messages import get_confirm_auto_repeat_message
 from utils.scheduler import (
     get_all_jobs_by_user_id,
     parse_time_from_str,
@@ -100,8 +103,15 @@ async def show_general_settings_handler(
         time_frames = state_data.get("time_frames")
         job_index = int(callback_data.data)
         jobs, stop_jobs = get_all_jobs_by_user_id(time_frames, user.id)
+
+        if not len(jobs):
+            return
+
         job = remove_job_by_id(jobs[job_index].id)
-        remove_job_by_id(stop_jobs[job_index].id)
+
+        if len(stop_jobs):
+            remove_job_by_id(stop_jobs[job_index].id)
+
         if job:
             # remove element from jobs list
             job_id = jobs[job_index].id
@@ -130,14 +140,16 @@ async def show_general_settings_handler(
         )
 
     if (
-        callback_data.action == "show_multiposting_timeframe"
+        callback_data.action == "show_multi_timeframe"
         or callback_data.action == "delete_multiposting_timeframe"
     ):
+        state_before = await state.get_state()
         await state.set_state(PostForm.time_frames)
         time_frames = state_data.get("time_frames")
+        back_post_action = "show_auto_repeat" if callback_data.data == "back" else None
         await query.message.edit_text(
             f"""
-<b>🗓 Расписание</b>\n
+<b>🗓 Расписание</b>\n\n
 Здесь можно установить ежедневное расписание постов в режиме мультипостинга, чтобы в дальнейшем планировать публикации всего одним кликом сразу в несколько каналов.\n
 Чтобы задать расписание, отправь время выхода постов в виде списка в любом удобном формате.\n
 🕒 <b>Публикация по времени</b>(отправте время в любом из форматов):\n
@@ -146,10 +158,10 @@ async def show_general_settings_handler(
 {BlockQuote('30m - Опубликуется каждые 30 минут\n12h - Опубликуется каждые 12часов\n1h 30m - Опубликуется каждый 1 часа 30 минут').as_html()}\n
 ⚠️ <b>ВАЖНО!</b> Минимальное время автоповтора/зацикленности 15m (минут)\n
 { '⏰ <b>Текущее расписание публикации:</b>\n' if time_frames else "" }
-{BlockQuote("\n".join(time_frames)).as_html() if time_frames else ""}\n
+<i>{"\n".join(time_frames) if time_frames else ""}</i>\n
 """,
             inline_message_id=query.inline_message_id,
-            reply_markup=get_multiposting_keyboard(state_data),
+            reply_markup=get_post_multiposting_keyboard(state_data),
         )
 
 
@@ -170,7 +182,6 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
         )
         return
 
-    # check if time_frames is valid
     time_frames_list = []
     for time_frame in time_frames:
         try:
@@ -184,14 +195,15 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
             )
             return
 
-    user_repository.create_multiposting(user, time_frames_list)
     await state.update_data(time_frames=time_frames_list)
+
+    user_repository.create_multiposting(user, time_frames_list)
+
+    confirm_message = get_confirm_auto_repeat_message(state_data, time_frames_list)
+
     state_data = await state.get_data()
+
     await message.answer(
-        f"""
-        ⏰ <b>Текущее расписание публикации:</b>
-        {BlockQuote("\n".join(time_frames_list)).as_html()}
-        """,
-        reply_to_message_id=message.message_id,
-        reply_markup=get_multiposting_keyboard(state_data),
+        text=confirm_message,
+        reply_markup=get_confirm_auto_repeat_keyboard(state_data),
     )

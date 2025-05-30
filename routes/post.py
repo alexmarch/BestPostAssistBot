@@ -25,11 +25,14 @@ from keyboard.keyboard import (
   get_back_to_post_keyboard,
   get_channel_list_keyboard,
   get_chat_channel_keyboard,
+  get_confirm_auto_repeat_keyboard,
   get_confirm_calendar_keyboard,
   get_confirm_post_keyboard,
   get_created_post_keyboard,
   get_next_calendar_keyboard,
+  get_next_post_time_keyboard,
   get_post_buttons_keyboard,
+  get_post_publich_keyboard,
   get_post_publish_settings_keyboard,
   get_reaction_buttons_keyboard,
   get_remove_post_interval_keyboard,
@@ -37,7 +40,9 @@ from keyboard.keyboard import (
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
+from utils import format_date
 from utils.media import remove_media_file
+from utils.messages import get_confirm_auto_repeat_message
 from utils.scheduler import create_jod, create_remove_post_jod
 
 from . import post_router
@@ -400,6 +405,8 @@ async def process_simple_calendar(
         callback_query, callback_data
     )
 
+    auto_repeat_dates = state_data.get("auto_repeat_dates", [])
+
     if selected:
         _state = await state.get_state()
 
@@ -409,6 +416,21 @@ async def process_simple_calendar(
                     "stop_schedule_date_frames": date.strftime("%d/%m/%Y"),
                 }
             )
+        elif _state == PostForm.auto_repeat:
+            if date.strftime("%d/%m/%Y") not in auto_repeat_dates:
+                auto_repeat_dates.append(date.strftime("%d/%m/%Y"))
+                await state.update_data(
+                    {
+                        "auto_repeat_dates": auto_repeat_dates,
+                    }
+                )
+            else:
+                auto_repeat_dates.remove(date.strftime("%d/%m/%Y"))
+                await state.update_data(
+                    {
+                        "auto_repeat_dates": auto_repeat_dates,
+                    }
+                )
         else:
             await state.update_data(
                 {
@@ -418,20 +440,46 @@ async def process_simple_calendar(
 
         state_data = await state.get_data()
         builder = InlineKeyboardBuilder()
-        builder.attach(
-            InlineKeyboardBuilder.from_markup(
-                await simplecalendar.start_calendar(
-                    year=date.year,
-                    month=date.month,
-                    start_day=date.day,
+
+        if _state == PostForm.stop_schedule_date_frames:
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    await simplecalendar.start_calendar(
+                        year=date.year,
+                        month=date.month,
+                        start_day=date.day,
+                    )
                 )
             )
-        )
-        if _state == PostForm.stop_schedule_date_frames:
             message = f'Укажите дату в календаре, с которой следует приостановить публикации: {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}\n\n'
             builder.attach(
                 InlineKeyboardBuilder.from_markup(
                     get_confirm_calendar_keyboard(state_data)
+                )
+            )
+        elif _state == PostForm.auto_repeat:
+            now = datetime.datetime.now()
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    await simplecalendar.start_multiselect_calendar(
+                        selected_dates=[
+                            datetime.datetime.strptime(date_str, "%d/%m/%Y")
+                            for date_str in auto_repeat_dates
+                        ],
+                    )
+                )
+            )
+            message = f"""Выберите <b>дату</b>(ы) Автоповтора поста ♻️\n\n
+Для повтора <u>каждый день</u> нажмите:\n
+дату выхода первого поста -> кнопку <b>Далее</b>\n\n
+Для повтора в <u>определенные даты</u> нажмите:\n
+несколько нужных дат в календаре -> кнопку <b>Далее</b>\n\n
+{ "Выбранная дата(ы):" if len(auto_repeat_dates) else "" }\n
+{"\n".join([format_date(date) for date in auto_repeat_dates])}\n\n
+"""
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    get_next_post_time_keyboard(state_data)
                 )
             )
         else:
@@ -459,8 +507,89 @@ async def set_post_settings_action_handler(
     user = user_repository.find_by_chat_id(query.from_user.id)
     state_data = await state.get_data()
     simplecalendar = SimpleCalendar(locale="uk_UA.UTF-8")
+    channel_list = state_data.get("chat_channel_list", [])
 
-    if callback_data.action == "publish_post":
+    if callback_data.action == "show_auto_repeat":  # Показать автоповтор
+
+        if not channel_list:
+            await query.answer(text="⚠️ Сначала выберите каналы/чаты!", show_alert=True)
+            return
+
+        builder = InlineKeyboardBuilder()
+
+        date = datetime.datetime.now()
+
+        await state.set_state(PostForm.auto_repeat)
+
+        auto_repeat_dates = state_data.get("auto_repeat_dates", [])
+
+        message = f"""Выберите <b>дату</b>(ы) Автоповтора поста ♻️\n\n
+Для повтора <u>каждый день</u> нажмите:\n
+дату выхода первого поста -> кнопку <b>Далее</b>\n\n
+Для повтора в <u>определенные даты</u> нажмите:\n
+несколько нужных дат в календаре -> кнопку <b>Далее</b>\n\n
+{ "Выбранная дата(ы):" if len(auto_repeat_dates) else "" }\n
+{"\n".join([format_date(date) for date in auto_repeat_dates])}\n\n
+"""
+
+        builder.attach(
+            InlineKeyboardBuilder.from_markup(
+                await simplecalendar.start_multiselect_calendar(
+                    selected_dates=[
+                        datetime.datetime.strptime(date_str, "%d/%m/%Y")
+                        for date_str in auto_repeat_dates
+                    ],
+                )
+            )
+        )
+
+        if len(auto_repeat_dates):
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    get_next_post_time_keyboard(state_data)
+                )
+            )
+
+        # builder.attach(
+        #     InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
+        # )
+
+        await query.message.edit_text(
+            text=message,
+            inline_message_id=query.inline_message_id,
+            reply_markup=builder.as_markup(),
+        )
+
+    if callback_data.action == "confirm_auto_repeat":
+        state_data = await state.get_data()
+        time_frames_list = state_data.get("time_frames", [])
+        channel_list = state_data.get("chat_channel_list", [])
+        channel_selected = list(filter(lambda c: c["checked"] == "on", channel_list))
+
+        message = f"""Вы успешно настроили <b>Автоповтор/Зацикленность</b> поста: ♻️\n\n {BlockQuote("\n".join([f"→ {ch['title']}" for ch in channel_selected])).as_html()}"""
+
+        text_message = f"{message}{get_confirm_auto_repeat_message(state_data, time_frames_list, "")}"
+
+        await query.message.edit_text(
+            text=text_message,
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_post_publich_keyboard(state_data),
+        )
+
+    if callback_data.action == "show_confirm_auto_repeat":
+        state_data = await state.get_data()
+        time_frames_list = state_data.get("time_frames", [])
+        text_message = get_confirm_auto_repeat_message(state_data, time_frames_list)
+        await query.message.edit_text(
+            text=text_message,
+            inline_message_id=query.inline_message_id,
+            reply_markup=get_confirm_auto_repeat_keyboard(state_data),
+        )
+
+    if callback_data.action == "publish_post":  # Подтвердить публикацию поста
+        if not channel_list:
+            await query.answer(text="⚠️ Сначала выберите каналы/чаты!", show_alert=True)
+            return
         await clear_message_ids(query.message)
         # оправить сообщение на подтверждение
         state_data = await state.get_data()
@@ -515,39 +644,31 @@ async def set_post_settings_action_handler(
         post = post_repository.create_post(user, state_data)
 
         if post:
-            await clear_message_ids(query.message)
-            await query.answer(text="✅ Пост успешно опубликован!", show_alert=True)
             time_frames = state_data.get("time_frames")
             time_frames_active = state_data.get("time_frames_active")
             date_frames_confirm = state_data.get("date_frames_confirm")
             stop_schedule_date_frames = state_data.get("stop_schedule_date_frames")
+            auto_repeat_dates = state_data.get("auto_repeat_dates", None)
 
             if not time_frames or time_frames_active == "off":
-                result = await post_repository.send_post(
-                    post.id, True, create_remove_post_jod
-                )
-                if result:
-                    channels = ""
-                    for channel in result["channels"]:
-                        channels += f"{html.blockquote(html.code(channel.title + '/' + channel.type))}\n"
-                    await query.message.answer(
-                        text=f"✅ <b>Отправка завершена.</b>\n\n📨 Доставлено {result['sended_channels']}/{result['total_channels']}:\n\n{channels}\n\n",
-                        reply_markup=get_back_to_post_keyboard(state_data),
-                    )
+                await post_repository.send_post(post.id, True, create_remove_post_jod)
             else:
                 # create job schedule with time_frames for sending post
-                create_jod(post, time_frames)
+                create_jod(post, time_frames, auto_repeat_dates)
 
-                multiposting = BlockQuote("\n".join(time_frames)).as_html()
+                # multiposting = BlockQuote("\n".join(time_frames)).as_html()
 
-                if date_frames_confirm:
+                # if date_frames_confirm:
 
-                    multiposting = f"<b>📅 Дата публикации:</b>\n{BlockQuote(date_frames_confirm + '-' + stop_schedule_date_frames).as_html()}\n\n<b>🕒 Интервал:</b>\n{multiposting}\n"
+                #     multiposting = f"<b>📅 Дата публикации:</b>\n{BlockQuote(date_frames_confirm + '-' + stop_schedule_date_frames).as_html()}\n\n<b>🕒 Интервал:</b>\n{multiposting}\n"
 
-                await query.message.answer(
-                    text=f"✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n",
-                    reply_markup=get_back_to_post_keyboard(state_data),
-                )
+                # await query.message.answer(
+                #     text=f"✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n",
+                #     reply_markup=get_back_to_post_keyboard(state_data),
+                # )
+                # send message Отправка...
+                await query.message.edit_text("📤 ⏳ Отправка поста...",
+                                              inline_message_id=query.inline_message_id)
 
     if callback_data.action == "active_multiposting_timeframe":
         multiposting = user_repository.get_multiposting_by_user_id(user.id)
@@ -697,6 +818,7 @@ async def set_post_settings_action_handler(
             )
         else:
             date = datetime.datetime.now()
+
         builder.attach(
             InlineKeyboardBuilder.from_markup(
                 await simplecalendar.start_calendar(

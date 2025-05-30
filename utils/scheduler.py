@@ -199,18 +199,23 @@ def get_all_jobs_by_user_id(time_frames: list[str], user_id: int) -> list:
     return jobs, stop_jobs
 
 
-def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
+def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] = []):
     post_schedule = post.post_schedule
-    _date = None
-
+    start_date = None
+    end_date, start_date = None, None
     if post_schedule and post_schedule.is_active:
-        _date = datetime.datetime.strptime(
+        start_date = datetime.datetime.strptime(
             post_schedule.schedule_date_frames, "%d/%m/%Y"
         )
-        stop_date = datetime.datetime.strptime(
+        end_date = datetime.datetime.strptime(
             post_schedule.stop_schedule_date_frames, "%d/%m/%Y"
         )
+        if len(auto_repeat_dates) > 0:
+            start_date = datetime.datetime.strptime(auto_repeat_dates[0], "%d/%m/%Y")
+            end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
+
     index = 0
+
     for time_frame in time_frames:
         try:
             _type, params = parse_schedule_string(time_frame)
@@ -221,9 +226,14 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                     args=[post.id],
                     id=f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval",
                     trigger=IntervalTrigger(
-                        start_date=_date,
+                        start_date=start_date,
+                        end_date=(
+                            end_date if end_date and end_date != start_date else None
+                        ),
+                        timezone="Europe/Kiev",
                         **params,
                     ),
+                    next_run_time=datetime.datetime.now(),
                     replace_existing=True,
                 )
             elif _type == "cron":
@@ -232,13 +242,17 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                     args=[post.id],
                     id=f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron",
                     trigger=CronTrigger(
-                        start_date=_date,
+                        start_date=start_date,
+                        end_date=(
+                            end_date if end_date and end_date != start_date else None
+                        ),
+                        timezone="Europe/Kiev",
                         **params,
                     ),
                     replace_existing=True,
                 )
 
-            if stop_date:
+            if end_date:
                 hour = params.get("hour", None)
                 if not hour:
                     hour = params.get("hours", None)
@@ -258,10 +272,11 @@ def create_jod(post: Post, time_frames: list[str], job_type: str = "cron"):
                     ],
                     id=f"{post.user_id}_{post.id}_{hour}_{minute}_{_type}_stop_job",
                     trigger=DateTrigger(
-                        run_date=stop_date,
+                        run_date=end_date,
                     ),
                     replace_existing=True,
                 )
+
             index += 1
         except ValueError as e:
             print(f"Error parsing time frame '{time_frame}': {e}")

@@ -15,6 +15,8 @@ class PostForm(StatesGroup):
     time_frames_active = "on"
     date_frames = State()
     stop_schedule_date_frames = State()
+    auto_repeat = State()
+    auto_repeat_dates = State()
     date_frames_confirm = State()
     buttons = State()
     reactions = State()

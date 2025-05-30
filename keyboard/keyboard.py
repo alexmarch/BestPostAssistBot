@@ -1,12 +1,11 @@
-from enum import Enum
 from typing import Any, Dict
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButtonRequestChat,
-    ReplyKeyboardMarkup,
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+  KeyboardButtonRequestChat,
+  ReplyKeyboardMarkup,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
@@ -315,6 +314,44 @@ def get_post_buttons_keyboard(
     return ikb.as_markup()
 
 
+def get_next_post_time_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text=f"Далее ›",
+                callback_data=GeneralSettingsButtonData(
+                    action="show_multi_timeframe",
+                    type="general_settings_action",
+                    data="back",
+                ).pack(),
+            )
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def get_post_publich_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text="⚡️ Опубликовать",
+                callback_data=PostButtonData(
+                    action="confirm_create_post", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="‹ Назад к посту",
+                callback_data=PostButtonData(
+                    action="back", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
 def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarkup:
     """Возвращает маркап клавиатуры для подтверждения поста"""
     date_frames_confirm = state_data.get("date_frames_confirm", None)
@@ -326,7 +363,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text="✅⚡️ Подтвердить",
+                text="⚡️ Опубликовать",
                 callback_data=PostButtonData(
                     action="confirm_create_post", type="post_settings_action"
                 ).pack(),
@@ -362,7 +399,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
             InlineKeyboardButton(
                 text=f"Изменить время поста",
                 callback_data=GeneralSettingsButtonData(
-                    action="show_multiposting_timeframe", type="general_settings_action"
+                    action="show_multi_timeframe", type="general_settings_action"
                 ).pack(),
             )
         ],
@@ -481,7 +518,7 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
             InlineKeyboardButton(
                 text="📅 Расписание мультипостинга",
                 callback_data=GeneralSettingsButtonData(
-                    action="show_multiposting_timeframe", type="general_settings_action"
+                    action="show_multi_timeframe", type="general_settings_action"
                 ).pack(),
             )
         ],
@@ -509,14 +546,42 @@ def get_general_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
+def get_post_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
+    """
+    Возвращает маркап клавиатуры для мультипостинга
+    """
+    inline_kb_list = [
+        # next button
+        [
+            InlineKeyboardButton(
+                text="Далее ›",
+                callback_data=PostButtonData(
+                    action="show_confirm_auto_repeat", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=f"‹ Назад",
+                callback_data=PostButtonData(
+                    action="show_auto_repeat", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def get_multiposting_keyboard(
+    data: Dict[str, Any], back_post_action=None, no_remove: bool = True
+) -> InlineKeyboardMarkup:
     """
     Возвращает маркап клавиатуры для мультипостинга
     """
     time_frames = data.get("time_frames", [])
     time_frames_active_state = data.get("time_frames_active", "off")
     btn_text = "Выключено" if time_frames_active_state == "off" else "Включено"
-    text = data.get("text", None)
 
     inline_kb_list = [
         (
@@ -529,7 +594,7 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
                     ).pack(),
                 )
             ]
-            if time_frames
+            if time_frames and not no_remove
             else []
         ),
         (
@@ -542,29 +607,40 @@ def get_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
                     ).pack(),
                 )
             ]
-            if time_frames
+            if time_frames and not no_remove
             else []
         ),
+        # (
+        #     [
+        #         InlineKeyboardButton(
+        #             text=f"‹ Назад к посту",
+        #             callback_data=PostButtonData(
+        #                 action="back", type="post_settings_action"
+        #             ).pack(),
+        #         )
+        #     ]
+        #     if text
+        #     else []
+        # ),
         (
             [
                 InlineKeyboardButton(
-                    text=f"‹ Назад к посту",
+                    text=f"‹ Назад",
                     callback_data=PostButtonData(
-                        action="back", type="post_settings_action"
+                        action=back_post_action, type="post_settings_action"
                     ).pack(),
                 )
             ]
-            if text
-            else []
+            if back_post_action
+            else [
+                InlineKeyboardButton(
+                    text="‹ Назад",
+                    callback_data=GeneralSettingsButtonData(
+                        action="back", type="general_settings_action"
+                    ).pack(),
+                )
+            ]
         ),
-        [
-            InlineKeyboardButton(
-                text="‹ Назад",
-                callback_data=GeneralSettingsButtonData(
-                    action="back", type="general_settings_action"
-                ).pack(),
-            )
-        ],
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
@@ -577,7 +653,7 @@ def get_next_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text="Далее ›",
+                text="✅⚡️ Далее ›",
                 callback_data=PostButtonData(
                     action="show_stop_schedule_date_frames", type="post_settings_action"
                 ).pack(),
@@ -588,6 +664,29 @@ def get_next_calendar_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
                 text="‹ Назад",
                 callback_data=PostButtonData(
                     action="back", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def get_confirm_auto_repeat_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
+    inline_kb_list = [
+        [
+            InlineKeyboardButton(
+                text="✅ Подтвердить",
+                callback_data=PostButtonData(
+                    action="confirm_auto_repeat", type="post_settings_action"
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="‹ Назад",
+                callback_data=GeneralSettingsButtonData(
+                    action="show_multi_timeframe", type="general_settings_action"
                 ).pack(),
             )
         ],
@@ -635,14 +734,14 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
         #         ).pack(),
         #     )
         # ],
-        # [
-        #     InlineKeyboardButton(
-        #         text="♻️ Автоповтор/Зацикленность",
-        #         callback_data=PostButtonData(
-        #             action="show_auto_repeat", type="post_settings_action"
-        #         ).pack(),
-        #     )
-        # ],
+        [
+            InlineKeyboardButton(
+                text="♻️ Автоповтор/Зацикленность",
+                callback_data=PostButtonData(
+                    action="show_auto_repeat", type="post_settings_action"
+                ).pack(),
+            )
+        ],
         [
             InlineKeyboardButton(
                 text="💼 Отчет клиету",
@@ -665,7 +764,7 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
                 ).pack(),
             ),  # Отображает календарь для отложеной публикации
             InlineKeyboardButton(
-                text="🚀 Опубликовать",
+                text="⚡️ Опубликовать",
                 callback_data=PostButtonData(
                     action="publish_post", type="post_settings_action"
                 ).pack(),

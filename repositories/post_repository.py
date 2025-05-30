@@ -67,8 +67,8 @@ class PostRepository(BaseRepository):
             ikb_buttons = InlineKeyboardBuilder()
 
             post = self.get_by_id(post_id)
-            channels = post.channels
-            total_channels = len(channels)
+            channels = []
+            total_channels = len(post.channels)
             sended_channels = 0
             reactions = post.post_reaction_buttons
             buttons = post.post_keyboards
@@ -112,8 +112,7 @@ class PostRepository(BaseRepository):
             )
 
             text = post.text
-            message = None
-            channels = []
+
             channel_members = 0
 
             if reactions:
@@ -150,9 +149,9 @@ class PostRepository(BaseRepository):
             if not len(post.channels):
                 print(f"No channels found for post ID {post_id}")
                 return
-
+            sended_channels = 0
             for channel in post.channels:
-                print(f"Sending post to channel {channel.chat_id}")
+                message = None
                 try:
                     if media_file_type == "photo":
                         photo = FSInputFile(
@@ -248,7 +247,7 @@ class PostRepository(BaseRepository):
                             disable_notification=not post.sound,
                         )
 
-                    if message and channel:
+                    if message:
                         sended_channels += 1
                         channels.append(channel)
                         post.messages_ids.append(
@@ -303,24 +302,26 @@ class PostRepository(BaseRepository):
             print(f"Error sending post: {e}")
 
         finally:
-            channels = ""
-            for channel in channels:
-                channels += f"{html.blockquote(html.code(channel.title + '/' + channel.type))}\n"
-
+            _channels_list = f"{html.blockquote('\n'.join([f"→ {ch.title} - {ch.type}" for ch in channels]))}\n\n"
+            _creatator = f"<b>Автор:</b> {html.link(f"@{post.user.username}", f"tg://user?id={post.user.chat_id}")} | {post.user.full_name}\n"
             if post.recipient_report_chat_id:
                 try:
                     await bot.send_message(
                         chat_id=post.recipient_report_chat_id,
-                        text=f"<b>✅ Отправка завершена!</b>\n\n<b>📨 Доставлено:</b> {sended_channels}/{total_channels}\n\n",
+                        text=f"<b>✅ 📬 Отправка завершена</b>\n\n{_channels_list}<b>📨 Доставлено:</b>{len(post.messages_ids)}/{total_channels}\n\n{_creatator}\n\n",
                     )
                 except Exception as e:
                     print(f"Error sending report to user: {e}")
 
             if send_report_to_owner:
-                await bot.send_message(
-                    chat_id=post.user.chat_id,
-                    text=f"<b>✅ Отправка завершена!</b>\n\n<b>📨 Доставлено:</b> {sended_channels}/{total_channels}\n\n{channels}\n\n",
-                )
+                try:
+                    await bot.send_message(
+                        chat_id=post.user.chat_id,
+                        text=f"<b>✅ 📬 Отправка завершена</b>\n\n{_channels_list}<b>📨 Доставлено:</b>{len(post.messages_ids)}/{total_channels}\n\n{_creatator}\n\n",
+                    )
+                except Exception as e:
+                    print(f"Error sending report to user: {e}")
+
             return {
                 "sended_channels": sended_channels,
                 "total_channels": total_channels,
@@ -359,7 +360,9 @@ class PostRepository(BaseRepository):
             if date_frames_confirm:
                 post_schedule = PostSchedule(
                     schedule_date_frames=post_form.get("date_frames"),
-                    stop_schedule_date_frames=post_form.get("stop_schedule_date_frames"),
+                    stop_schedule_date_frames=post_form.get(
+                        "stop_schedule_date_frames"
+                    ),
                     is_active=True,
                     post=post,
                 )
@@ -388,11 +391,12 @@ class PostRepository(BaseRepository):
 
             if chat_channel_list:
                 for chat_channel in chat_channel_list:
-                    channel = self.session.execute(
-                        select(Channel).where(Channel.id == chat_channel["id"])
-                    ).scalar()
-                    if channel:
-                        post.channels.append(channel)
+                    if chat_channel["checked"] == "on":
+                        channel = self.session.execute(
+                            select(Channel).where(Channel.id == chat_channel["id"])
+                        ).scalar()
+                        if channel:
+                            post.channels.append(channel)
 
             if post_form.get("media_file_name"):
                 # Создаем новый объект MediaFile

@@ -1,3 +1,4 @@
+import locale
 import re
 from datetime import datetime, time
 
@@ -5,6 +6,20 @@ from models import get_session
 from repositories.post_repository import PostRepository
 
 post_repository = PostRepository(get_session())
+
+
+def format_date(date_str: str, _locale: str = "ru_RU.UTF-8") -> str:
+    """
+    Format a date string from "DD/MM/YYYY" to a 23 Пт. Май 2023
+    """
+    try:
+        # Parse the date string into a datetime object
+        dt = datetime.strptime(date_str, "%d/%m/%Y")
+        # Set the locale for formatting
+        locale.setlocale(locale.LC_TIME, _locale)
+        return dt.strftime("%d %a. %B %Y").title()
+    except ValueError as e:
+        raise ValueError(f"Invalid date format: {e}") from e
 
 
 def parse_time(time_str: str) -> time:
