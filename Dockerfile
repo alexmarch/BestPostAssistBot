@@ -20,6 +20,10 @@ RUN echo "uk_UA.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=uk_UA.UTF-8
 
+# Install also Russian locale
+RUN echo "ru_RU.UTF-8 UTF-8" >> /etc/locale.gen \
+    && locale-gen ru_RU.UTF-8
+
 # Set environment variables for the locale
 ENV LANG=uk_UA.UTF-8
 ENV LANGUAGE=uk_UA:uk
