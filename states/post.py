@@ -11,6 +11,7 @@ class PostForm(StatesGroup):
     recipient_report_chat_id = State()
     recipient_post_chat_id = State()
     auto_remove_datetime = State(state="2d")
+    settings_time_frames = State()
     time_frames = State()
     time_frames_active = "on"
     date_frames = State()
@@ -22,6 +23,7 @@ class PostForm(StatesGroup):
     reactions = State()
     sound = State()
     comments = State()
+    settings = State()
     pin = State()
     signature = State()
     is_confirm = State()

@@ -41,7 +41,7 @@ post_inline_buttons = [
         "type": "post_settings_action",
     },
     {
-        "text": "🎛️ Добавить кнопки",
+        "text": "🕹️ Добавить кнопки",
         "action": "add_buttons",
         "type": "post_settings_action",
     },
@@ -210,9 +210,9 @@ def get_remove_post_interval_keyboard(
         ],
         [
             InlineKeyboardButton(
-                text="‹ Назад к посту",
+                text="‹ Назад",
                 callback_data=PostButtonData(
-                    action="back", type="post_settings_action"
+                    action="next", type="post_settings_action"
                 ).pack(),
             )
         ],
@@ -488,7 +488,7 @@ def get_post_jobs_keyboard(data: Dict[str, Any], jobs: list) -> InlineKeyboardMa
         inline_kb_list.append(
             [
                 InlineKeyboardButton(
-                    text=f"🗑️ Удалить задачу {job.id}",
+                    text=f"🚫 Отменить {job.id}",
                     callback_data=GeneralSettingsButtonData(
                         action="delete_post_job",
                         type="general_settings_action",
@@ -568,6 +568,67 @@ def get_post_multiposting_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup
                 ).pack(),
             )
         ],
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def get_settings_multiposting_keyboard(
+    data: Dict[str, Any], back_post_action=None, no_remove: bool = False
+) -> InlineKeyboardMarkup:
+    """
+    Возвращает маркап клавиатуры для настроек мультипостинга
+    """
+    time_frames = data.get("time_frames", [])
+    time_frames_active_state = data.get("time_frames_active", "off")
+    btn_text = "Выключено" if time_frames_active_state == "off" else "Включено"
+
+    inline_kb_list = [
+        # (
+        #     [
+        #         InlineKeyboardButton(
+        #             text=f"{CheckState[time_frames_active_state]} {btn_text}",
+        #             callback_data=GeneralSettingsButtonData(
+        #                 action="active_multiposting_timeframe",
+        #                 type="general_settings_action",
+        #             ).pack(),
+        #         )
+        #     ]
+        #     if time_frames and not no_remove
+        #     else []
+        # ),
+        (
+            [
+                InlineKeyboardButton(
+                    text="🗑️ Удалить",
+                    callback_data=GeneralSettingsButtonData(
+                        action="delete_multiposting_timeframe",
+                        type="general_settings_action",
+                    ).pack(),
+                )
+            ]
+            if time_frames and not no_remove
+            else []
+        ),
+        (
+            [
+                InlineKeyboardButton(
+                    text=f"‹ Назад к посту",
+                    callback_data=PostButtonData(
+                        action="back", type="post_settings_action"
+                    ).pack(),
+                )
+            ]
+            if back_post_action
+            else [
+                InlineKeyboardButton(
+                    text="‹ Назад",
+                    callback_data=GeneralSettingsButtonData(
+                        action="back", type="general_settings_action"
+                    ).pack(),
+                )
+            ]
+        ),
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
@@ -743,6 +804,15 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
             )
         ],
         [
+            # Таймер авто удаления
+            InlineKeyboardButton(
+                text="🕒 Таймер удаления",
+                callback_data=PostButtonData(
+                    action="show_remove_time", type="post_settings_action"
+                ).pack(),
+            ),
+        ],
+        [
             InlineKeyboardButton(
                 text="💼 Отчет клиету",
                 callback_data=PostButtonData(
@@ -769,15 +839,6 @@ def get_post_publish_settings_keyboard(data: Dict[str, Any]) -> InlineKeyboardMa
                     action="publish_post", type="post_settings_action"
                 ).pack(),
             ),  # ✔️ Подтвердите отправку поста с кнопкой подтвердить
-        ],
-        [
-            # Таймер авто удаления
-            InlineKeyboardButton(
-                text="🕒 Таймер удаления",
-                callback_data=PostButtonData(
-                    action="show_remove_time", type="post_settings_action"
-                ).pack(),
-            ),
         ],
         [
             InlineKeyboardButton(
@@ -882,10 +943,10 @@ def get_settings_post_keyboard(data: Dict[str, Any]) -> InlineKeyboardMarkup:
             btn["text"] = "🗑️ Удалить кнопки"
             btn["action"] = "remove_buttons"
         elif not data.get("buttons") and btn["action"] == "remove_buttons":
-            btn["text"] = "🎛️ Добавить кнопки"
+            btn["text"] = "🕹️ Добавить кнопки"
             btn["action"] = "add_buttons"
 
-        if btn["action"] == "sound":
+        if btn["action"] == "sound" and data.get("sound") is not None:
             btn_text = f'{CheckState[data["sound"]]} {btn['text']}'
         elif btn["action"] == "comments":
             btn_text = f'{CheckState[data["comments"]]} {btn['text']}'

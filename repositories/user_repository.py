@@ -1,9 +1,6 @@
-from typing import Any
-
 from sqlalchemy import func, select
 
 from models import Channel, Multiposting, Post, User
-from states.post import PostForm
 from utils.scheduler import remove_job_by_time_interval
 
 from .base import BaseRepository
@@ -127,3 +124,6 @@ class UserRepository(BaseRepository):
         if multiposting:
             multiposting.active = True if state == "on" else False
             self.session.commit()
+
+    def get_all_users(self) -> list[User]:
+        return self.session.execute(select(User)).scalars().all()

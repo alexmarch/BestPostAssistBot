@@ -11,10 +11,11 @@ from keyboard.keyboard import (
     get_multiposting_keyboard,
     get_post_jobs_keyboard,
     get_post_multiposting_keyboard,
+    get_settings_multiposting_keyboard,
 )
 from repositories import user_repository
 from states.post import PostForm
-from utils.messages import get_confirm_auto_repeat_message
+from utils.messages import get_confirm_auto_repeat_message, get_multiposting_message
 from utils.scheduler import (
     get_all_jobs_by_user_id,
     parse_time_from_str,
@@ -46,6 +47,7 @@ async def show_settings_handler(
 ) -> None:
     user = user_repository.find_by_chat_id(message.from_user.id)
     multiposting = user_repository.get_multiposting_by_user_id(user.id)
+    await state.set_state(PostForm.settings)
     if multiposting:
         time_frames = multiposting.time_frames.split("|")
         await state.update_data(
@@ -74,6 +76,7 @@ async def show_general_settings_handler(
 
     if callback_data.action == "back":
         title = BlockQuote("⚙️ Настройки:")
+        await state.set_state(PostForm.settings)
         await query.message.edit_text(
             f"{title.as_html()}\n\n",
             reply_markup=get_general_settings_keyboard(state_data),
@@ -131,38 +134,81 @@ async def show_general_settings_handler(
     if callback_data.action == "delete_multiposting_timeframe":
         user_repository.delete_multiposting_timeframe(user)
         remove_job_by_time_interval(state_data.get("time_frames"), user.id)
+
         await state.update_data(time_frames=None)
         state_data = await state.get_data()
+        time_frames = state_data.get("time_frames", [])
+
         await query.message.edit_text(
-            "⏰ Расписание мультипостинга удалено. Теперь посты будут выходить сразу после создания.",
-            eply_markup=get_multiposting_keyboard(state_data),
+            get_multiposting_message(time_frames),
             inline_message_id=query.inline_message_id,
+            reply_markup=(get_settings_multiposting_keyboard(state_data)),
         )
 
-    if (
-        callback_data.action == "show_multi_timeframe"
-        or callback_data.action == "delete_multiposting_timeframe"
-    ):
+    if callback_data.action == "show_multi_timeframe":
+
         state_before = await state.get_state()
-        await state.set_state(PostForm.time_frames)
-        time_frames = state_data.get("time_frames")
-        back_post_action = "show_auto_repeat" if callback_data.data == "back" else None
+
+        if state_before == PostForm.settings:
+            await state.set_state(PostForm.settings_time_frames)
+        else:
+            await state.set_state(PostForm.time_frames)
+
+        time_frames = state_data.get("time_frames", [])
+
         await query.message.edit_text(
-            f"""
-<b>🗓 Расписание</b>\n\n
-Здесь можно установить ежедневное расписание постов в режиме мультипостинга, чтобы в дальнейшем планировать публикации всего одним кликом сразу в несколько каналов.\n
-Чтобы задать расписание, отправь время выхода постов в виде списка в любом удобном формате.\n
-🕒 <b>Публикация по времени</b>(отправте время в любом из форматов):\n
-{BlockQuote("12:00 - Опубликуется в 12:00\n12 00 - Опубликуется в 12:00\n1200 - Опубликуется в 12:00\n12 00, 15 00, 18 00 - Опубликуется в 12:00, 15:00, 18:00").as_html()}\n
-🕒 <b>Настройка интервалов выхода постов:</b>\n
-{BlockQuote('30m - Опубликуется каждые 30 минут\n12h - Опубликуется каждые 12часов\n1h 30m - Опубликуется каждый 1 часа 30 минут').as_html()}\n
-⚠️ <b>ВАЖНО!</b> Минимальное время автоповтора/зацикленности 15m (минут)\n
-{ '⏰ <b>Текущее расписание публикации:</b>\n' if time_frames else "" }
-<i>{"\n".join(time_frames) if time_frames else ""}</i>\n
-""",
+            get_multiposting_message(time_frames),
             inline_message_id=query.inline_message_id,
-            reply_markup=get_post_multiposting_keyboard(state_data),
+            reply_markup=(
+                get_post_multiposting_keyboard(state_data)
+                if state_before != PostForm.settings
+                else get_settings_multiposting_keyboard(state_data)
+            ),
         )
+
+
+@user_router.message(PostForm.settings_time_frames)
+async def create_settings_time_frames_start_handler(
+    message: Message, state: FSMContext
+) -> None:
+    user = user_repository.find_by_chat_id(message.from_user.id)
+    state_data = await state.get_data()
+    time_frames = message.text.split(",")
+    time_frames = [
+        time_frame.strip() for time_frame in time_frames if time_frame.strip()
+    ]
+    # check if time_frames is empty
+    if not time_frames:
+        await message.answer(
+            text="⚠️ Пожалуйста, введите хотя бы одно время.",
+            reply_to_message_id=message.message_id,
+            reply_markup=get_multiposting_keyboard(state_data),
+        )
+        return
+
+    time_frames_list = []
+    for time_frame in time_frames:
+        try:
+            time_interval = parse_time_from_str(time_frame)
+            time_frames_list.append(time_interval)
+        except Exception as e:
+            await message.answer(
+                text="⚠️ Ошибка формата времяни, повторите ввод.",
+                reply_to_message_id=message.message_id,
+                reply_markup=get_multiposting_keyboard(state_data),
+            )
+            return
+
+    await state.update_data(time_frames=time_frames_list)
+
+    user_repository.create_multiposting(user, time_frames_list)
+
+    state_data = await state.get_data()
+
+    await message.answer(
+        text=get_multiposting_message(state_data.get("time_frames", [])),
+        reply_markup=get_multiposting_keyboard(state_data),
+    )
 
 
 @user_router.message(PostForm.time_frames)

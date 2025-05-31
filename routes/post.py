@@ -9,34 +9,34 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-  DialogCalendar,
-  DialogCalendarCallback,
-  SimpleCalendar,
-  SimpleCalendarCallback,
-  get_user_locale,
+    DialogCalendar,
+    DialogCalendarCallback,
+    SimpleCalendar,
+    SimpleCalendarCallback,
+    get_user_locale,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-  ChannelData,
-  EmojiButtonData,
-  PostButtonData,
-  get_add_media_keyboard,
-  get_back_to_post_keyboard,
-  get_channel_list_keyboard,
-  get_chat_channel_keyboard,
-  get_confirm_auto_repeat_keyboard,
-  get_confirm_calendar_keyboard,
-  get_confirm_post_keyboard,
-  get_created_post_keyboard,
-  get_next_calendar_keyboard,
-  get_next_post_time_keyboard,
-  get_post_buttons_keyboard,
-  get_post_publich_keyboard,
-  get_post_publish_settings_keyboard,
-  get_reaction_buttons_keyboard,
-  get_remove_post_interval_keyboard,
-  get_settings_post_keyboard,
+    ChannelData,
+    EmojiButtonData,
+    PostButtonData,
+    get_add_media_keyboard,
+    get_back_to_post_keyboard,
+    get_channel_list_keyboard,
+    get_chat_channel_keyboard,
+    get_confirm_auto_repeat_keyboard,
+    get_confirm_calendar_keyboard,
+    get_confirm_post_keyboard,
+    get_created_post_keyboard,
+    get_next_calendar_keyboard,
+    get_next_post_time_keyboard,
+    get_post_buttons_keyboard,
+    get_post_publich_keyboard,
+    get_post_publish_settings_keyboard,
+    get_reaction_buttons_keyboard,
+    get_remove_post_interval_keyboard,
+    get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
@@ -402,8 +402,10 @@ async def process_simple_calendar(
 
     # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
     selected, date = await simplecalendar.process_selection(
-        callback_query, callback_data
+        callback_query, callback_data, state
     )
+
+    print(f"Selected date: {date}, Selected: {selected}")
 
     auto_repeat_dates = state_data.get("auto_repeat_dates", [])
 
@@ -451,14 +453,13 @@ async def process_simple_calendar(
                     )
                 )
             )
-            message = f'Укажите дату в календаре, с которой следует приостановить публикации: {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}\n\n'
+            message = f'УВыберите <b>дату</b> с которой следует приостановить публикации:\n\n<b>Выбранная дата</b>:\n\n<i>{format_date(date.strftime("%d/%m/%Y"))}</i>\n\n'
             builder.attach(
                 InlineKeyboardBuilder.from_markup(
                     get_confirm_calendar_keyboard(state_data)
                 )
             )
         elif _state == PostForm.auto_repeat:
-            now = datetime.datetime.now()
             builder.attach(
                 InlineKeyboardBuilder.from_markup(
                     await simplecalendar.start_multiselect_calendar(
@@ -483,7 +484,16 @@ async def process_simple_calendar(
                 )
             )
         else:
-            message = f'Укажите дату в календаре для отложенного поста: {BlockQuote(date.strftime("%d/%m/%Y")).as_html()}\n\n'
+            message = f'📅 Выберите <b>дату</b> для отложенного поста:\n\n<b>Выбранная дата</b>:\n\n<i>{format_date(date.strftime("%d/%m/%Y"))}</i>\n\n'
+            builder.attach(
+                InlineKeyboardBuilder.from_markup(
+                    await simplecalendar.start_calendar(
+                        year=date.year,
+                        month=date.month,
+                        start_day=date.day,
+                    )
+                )
+            )
             builder.attach(
                 InlineKeyboardBuilder.from_markup(
                     get_next_calendar_keyboard(state_data)
@@ -599,14 +609,10 @@ async def set_post_settings_action_handler(
         )
 
     if callback_data.action == "ai_integration":
-        await query.answer(
-            text="🌟 Доступно только в платной подписке!", show_alert=True
-        )
+        await query.answer(text="🚧 Функия в разработке.", show_alert=True)
 
     if callback_data.action == "crm_integration":
-        await query.answer(
-            text="🌟 Доступно только в платной подписке!", show_alert=True
-        )
+        await query.answer(text="🚧 Функия в разработке.", show_alert=True)
 
     if callback_data.action == "show_send_report":
         info_message = BlockQuote(
@@ -667,8 +673,9 @@ async def set_post_settings_action_handler(
                 #     reply_markup=get_back_to_post_keyboard(state_data),
                 # )
                 # send message Отправка...
-                await query.message.edit_text("📤 ⏳ Отправка поста...",
-                                              inline_message_id=query.inline_message_id)
+                await query.message.edit_text(
+                    "📤 ⏳ Отправка поста...", inline_message_id=query.inline_message_id
+                )
 
     if callback_data.action == "active_multiposting_timeframe":
         multiposting = user_repository.get_multiposting_by_user_id(user.id)
@@ -832,7 +839,7 @@ async def set_post_settings_action_handler(
             InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
         )
         await query.message.edit_text(
-            text=f"{BlockQuote('📅 Укажите дату в календаре, с которой следует приостановить публикации').as_html()}\n\n",
+            text=f"📅 Выберите <b>дату</b> с которой следует приостановить публикации:\n\n",
             inline_message_id=query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
@@ -861,7 +868,7 @@ async def set_post_settings_action_handler(
             InlineKeyboardBuilder.from_markup(get_back_to_post_keyboard(state_data))
         )
         await query.message.edit_text(
-            text="📅 Укажите дату в календаре для отложенного поста\n\n",
+            text="📅 Выберите <b>дату</b> в календаре для отложенного поста:\n\n",
             inline_message_id=query.inline_message_id,
             reply_markup=builder.as_markup(),
         )
