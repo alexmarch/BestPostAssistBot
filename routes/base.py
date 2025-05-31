@@ -33,10 +33,15 @@ async def version_handler(message: Message) -> None:
     if OWNER_ID == str(message.from_user.id):
         users = user_repository.get_all_users()
         for user in users:
-            await bot.send_message(
+            message = await bot.send_message(
                 user.chat_id,
                 get_notify_update_version_message(),
                 disable_web_page_preview=True,
+            )
+            await bot.pin_chat_message(
+                user.chat_id,
+                message.message_id,
+                disable_notification=False,
             )
 
 
