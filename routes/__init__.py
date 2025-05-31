@@ -16,9 +16,12 @@ class UserMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        event_user = data["event_from_user"]
-        user = user_repository.find_by_chat_id(event_user.id)
-        data["user_id"] = user.id
+        event_user = data.get("event_from_user", None)
+        user = None
+        if event_user:
+            user = user_repository.find_by_chat_id(event_user.id)
+        if user:
+            data["user_id"] = user.id
         return await handler(event, data)
 
 
