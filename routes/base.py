@@ -36,7 +36,7 @@ async def send_admin_message_handler(message: Message, state: FSMContext) -> Non
             try:
                 message = await bot.send_message(
                     user.chat_id,
-                    text,
+                    f"<b>⚜️ Admin:</b>\n\n {text}",
                     disable_web_page_preview=True,
                     parse_mode="HTML",
                 )
