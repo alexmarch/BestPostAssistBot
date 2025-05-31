@@ -58,7 +58,6 @@ async def send_admin_message_handler(message: Message, state: FSMContext) -> Non
 async def users_handler(message: Message) -> None:
     if OWNER_ID == str(message.from_user.id):
         users = user_repository.get_all_users()
-        text = message.text
         if not users:
             await message.answer("Пользователей нет")
             return
@@ -67,7 +66,7 @@ async def users_handler(message: Message) -> None:
             f"{user.chat_id} - {user.username} - {user.full_name}" for user in users
         )
         await message.answer(
-            f"<b>Список пользователей:</b>\n\n{Underline(text)}\n\n{user_list}",
+            f"<b>Список пользователей:</b>\n\n{user_list}",
             parse_mode="HTML",
         )
 
