@@ -9,34 +9,34 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-    DialogCalendar,
-    DialogCalendarCallback,
-    SimpleCalendar,
-    SimpleCalendarCallback,
-    get_user_locale,
+  DialogCalendar,
+  DialogCalendarCallback,
+  SimpleCalendar,
+  SimpleCalendarCallback,
+  get_user_locale,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-    ChannelData,
-    EmojiButtonData,
-    PostButtonData,
-    get_add_media_keyboard,
-    get_back_to_post_keyboard,
-    get_channel_list_keyboard,
-    get_chat_channel_keyboard,
-    get_confirm_auto_repeat_keyboard,
-    get_confirm_calendar_keyboard,
-    get_confirm_post_keyboard,
-    get_created_post_keyboard,
-    get_next_calendar_keyboard,
-    get_next_post_time_keyboard,
-    get_post_buttons_keyboard,
-    get_post_publich_keyboard,
-    get_post_publish_settings_keyboard,
-    get_reaction_buttons_keyboard,
-    get_remove_post_interval_keyboard,
-    get_settings_post_keyboard,
+  ChannelData,
+  EmojiButtonData,
+  PostButtonData,
+  get_add_media_keyboard,
+  get_back_to_post_keyboard,
+  get_channel_list_keyboard,
+  get_chat_channel_keyboard,
+  get_confirm_auto_repeat_keyboard,
+  get_confirm_calendar_keyboard,
+  get_confirm_post_keyboard,
+  get_created_post_keyboard,
+  get_next_calendar_keyboard,
+  get_next_post_time_keyboard,
+  get_post_buttons_keyboard,
+  get_post_publich_keyboard,
+  get_post_publish_settings_keyboard,
+  get_reaction_buttons_keyboard,
+  get_remove_post_interval_keyboard,
+  get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
@@ -383,7 +383,7 @@ async def process_dialog_calendar(
     callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
 ):
     state_data = await state.get_data()
-    selected, date = await DialogCalendar(locale="uk_UA.UTF-8").process_selection(
+    selected, date = await DialogCalendar(locale="ru_RU.UTF-8").process_selection(
         callback_query, callback_data
     )
     if selected:
@@ -398,7 +398,7 @@ async def process_simple_calendar(
     callback_query: CallbackQuery, state: FSMContext, callback_data: CallbackData
 ):
     state_data = await state.get_data()
-    simplecalendar = SimpleCalendar(locale="uk_UA.UTF-8")
+    simplecalendar = SimpleCalendar(locale="ru_RU.UTF-8")
 
     # calendar.set_dates_range(datetime(2022, 1, 1), datetime(2025, 12, 31))
     selected, date = await simplecalendar.process_selection(
@@ -516,7 +516,7 @@ async def set_post_settings_action_handler(
     """
     user = user_repository.find_by_chat_id(query.from_user.id)
     state_data = await state.get_data()
-    simplecalendar = SimpleCalendar(locale="uk_UA.UTF-8")
+    simplecalendar = SimpleCalendar(locale="ru_RU.UTF-8")
     channel_list = state_data.get("chat_channel_list", [])
 
     if callback_data.action == "show_auto_repeat":  # Показать автоповтор
