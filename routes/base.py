@@ -93,8 +93,12 @@ async def version_handler(message: Message) -> None:
 async def start_handler(message: Message) -> None:
     content = BlockQuote(
         as_list(
+            as_marked_section("", "Быстрый старт", marker="🚀 "),
+            as_marked_section("", "Создание постов", marker="📝 "),
+            as_marked_section("", "Планировщик постов", marker="📅 "),
+            as_marked_section("", "Автоповтор/Зацикленность", marker="♻️ "),
+            as_marked_section("", "Автопостинг", marker="📤 "),
             as_marked_section("", "Отложенные посты", marker="🕓 "),
-            as_marked_section("", "Зацикленные посты", marker="🔃 "),
             as_marked_section("", "Мультипостинг в каналы и чаты", marker="📢 "),
             as_marked_section(
                 "", "Мультиредактор отложенных и зацикленных постов", marker="✅ "
