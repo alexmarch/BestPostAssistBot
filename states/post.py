@@ -11,6 +11,7 @@ class PostForm(StatesGroup):
     recipient_report_chat_id = State()
     recipient_post_chat_id = State()
     auto_remove_datetime = State(state="2d")
+    admin_message = State()
     settings_time_frames = State()
     time_frames = State()
     time_frames_active = "on"
