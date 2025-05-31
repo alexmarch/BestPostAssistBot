@@ -63,7 +63,13 @@ async def users_handler(message: Message) -> None:
             await message.answer("Пользователей нет")
             return
 
-        await message.answer(text, disable_web_page_preview=True)
+        user_list = "\n".join(
+            f"{user.chat_id} - {user.username} - {user.full_name}" for user in users
+        )
+        await message.answer(
+            f"<b>Список пользователей:</b>\n\n{Underline(text)}\n\n{user_list}",
+            parse_mode="HTML",
+        )
 
 
 @base_router.message(Command("version"))
