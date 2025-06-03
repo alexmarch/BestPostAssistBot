@@ -216,6 +216,7 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
     user = user_repository.find_by_chat_id(message.from_user.id)
     state_data = await state.get_data()
     time_frames = message.text.split(",")
+    auto_repeat_dates = state_data.get("auto_repeat_dates", [])
     time_frames = [
         time_frame.strip() for time_frame in time_frames if time_frame.strip()
     ]
@@ -245,11 +246,19 @@ async def create_time_frames_handler(message: Message, state: FSMContext) -> Non
 
     user_repository.create_multiposting(user, time_frames_list)
 
-    confirm_message = get_confirm_auto_repeat_message(state_data, time_frames_list)
-
     state_data = await state.get_data()
 
-    await message.answer(
-        text=confirm_message,
-        reply_markup=get_confirm_auto_repeat_keyboard(state_data),
-    )
+    if len(auto_repeat_dates):
+        confirm_message = get_confirm_auto_repeat_message(state_data, time_frames_list)
+        await message.answer(
+            text=confirm_message,
+            reply_markup=get_confirm_auto_repeat_keyboard(state_data),
+        )
+    else:
+        confirm_message = "<b>⏰ Текущее расписание публикации:</b>\n" + "\n".join(
+            [f"<i>{time_frame}</i>" for time_frame in time_frames_list]
+        )
+        await message.answer(
+            text=confirm_message,
+            reply_markup=get_multiposting_keyboard(state_data, "back"),
+        )
