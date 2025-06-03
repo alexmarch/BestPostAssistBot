@@ -14,6 +14,7 @@ class PostForm(StatesGroup):
     admin_message = State()
     settings_time_frames = State()
     time_frames = State()
+    active_state = "on"
     time_frames_active = "on"
     date_frames = State()
     stop_schedule_date_frames = State()

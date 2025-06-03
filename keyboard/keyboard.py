@@ -385,7 +385,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
         (
             [
                 InlineKeyboardButton(
-                    text=f"{CheckState[time_frames_active_state]}⏰ Интервал {btn_text}",
+                    text=f"⏰ Интервал {btn_text}",
                     callback_data=PostButtonData(
                         action="active_multiposting_timeframe",
                         type="post_settings_action",

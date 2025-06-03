@@ -9,34 +9,34 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-  DialogCalendar,
-  DialogCalendarCallback,
-  SimpleCalendar,
-  SimpleCalendarCallback,
-  get_user_locale,
+    DialogCalendar,
+    DialogCalendarCallback,
+    SimpleCalendar,
+    SimpleCalendarCallback,
+    get_user_locale,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-  ChannelData,
-  EmojiButtonData,
-  PostButtonData,
-  get_add_media_keyboard,
-  get_back_to_post_keyboard,
-  get_channel_list_keyboard,
-  get_chat_channel_keyboard,
-  get_confirm_auto_repeat_keyboard,
-  get_confirm_calendar_keyboard,
-  get_confirm_post_keyboard,
-  get_created_post_keyboard,
-  get_next_calendar_keyboard,
-  get_next_post_time_keyboard,
-  get_post_buttons_keyboard,
-  get_post_publich_keyboard,
-  get_post_publish_settings_keyboard,
-  get_reaction_buttons_keyboard,
-  get_remove_post_interval_keyboard,
-  get_settings_post_keyboard,
+    ChannelData,
+    EmojiButtonData,
+    PostButtonData,
+    get_add_media_keyboard,
+    get_back_to_post_keyboard,
+    get_channel_list_keyboard,
+    get_chat_channel_keyboard,
+    get_confirm_auto_repeat_keyboard,
+    get_confirm_calendar_keyboard,
+    get_confirm_post_keyboard,
+    get_created_post_keyboard,
+    get_next_calendar_keyboard,
+    get_next_post_time_keyboard,
+    get_post_buttons_keyboard,
+    get_post_publich_keyboard,
+    get_post_publish_settings_keyboard,
+    get_reaction_buttons_keyboard,
+    get_remove_post_interval_keyboard,
+    get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
@@ -680,7 +680,8 @@ async def set_post_settings_action_handler(
     if callback_data.action == "active_multiposting_timeframe":
         multiposting = user_repository.get_multiposting_by_user_id(user.id)
         if multiposting:
-            active_state = "off" if multiposting.active else "on"
+            # active_state = "off" if multiposting.active else "on"
+            active_state = "on"
             user_repository.update_multiposting_active_timeframe(
                 user,
                 active_state,
