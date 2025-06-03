@@ -363,7 +363,7 @@ def get_confirm_post_keyboard(state_data: dict[str, Any]) -> InlineKeyboardMarku
     inline_kb_list = [
         [
             InlineKeyboardButton(
-                text="⚡️ Опубликовать",
+                text="✅ Подтвердить",
                 callback_data=PostButtonData(
                     action="confirm_create_post", type="post_settings_action"
                 ).pack(),

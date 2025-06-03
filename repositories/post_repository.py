@@ -10,13 +10,13 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-  Channel,
-  MediaFile,
-  Post,
-  PostKeyboard,
-  PostReactioButton,
-  PostSchedule,
-  User,
+    Channel,
+    MediaFile,
+    Post,
+    PostKeyboard,
+    PostReactioButton,
+    PostSchedule,
+    User,
 )
 
 from .base import BaseRepository
@@ -66,7 +66,14 @@ class PostRepository(BaseRepository):
             ikb_reaction = InlineKeyboardBuilder()
             ikb_buttons = InlineKeyboardBuilder()
 
-            post = self.get_by_id(post_id)
+            print("Post ID:", post_id)
+
+            post = self.get_by_id(int(post_id))
+
+            if not post:
+                print(f"Post with ID {post_id} not found")
+                return {}
+
             channels = []
             total_channels = len(post.channels)
             sended_channels = 0
@@ -302,6 +309,7 @@ class PostRepository(BaseRepository):
             print(f"Error sending post: {e}")
 
         finally:
+            print(post)
             _channels_list = f"{html.blockquote('\n'.join([f"→ {ch.title} - {ch.type}" for ch in channels]))}\n\n"
             _creatator = f"<b>Автор:</b> {html.link(f"@{post.user.username}", f"tg://user?id={post.user.chat_id}")} | {post.user.full_name}\n"
             if post.recipient_report_chat_id:
@@ -331,7 +339,7 @@ class PostRepository(BaseRepository):
                 "user": post.user,
             }
 
-    def create_post(self, user: User, post_form: dict[str, Any]) -> Post | bool:
+    def create_post(self, user: User, post_form: dict[str, Any]) -> Post | None:
         """
         Создает новый пост и связывает его с пользователем.
         :param user: Пользователь, которому принадлежит пост.
@@ -410,6 +418,9 @@ class PostRepository(BaseRepository):
                 self.session.add(post_media_file)
                 post.post_media_file = post_media_file
             self.session.commit()
+            self.session.refresh(post)
+            post = self.get_by_id(post.id)  # Refresh the post object
+            print(f"Post created with ID: {post.id}")
             return post
         except Exception as e:
             print(f"Error creating post: {e}")

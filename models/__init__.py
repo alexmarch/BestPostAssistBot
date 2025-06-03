@@ -19,7 +19,9 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "mysql+pymysql://vanileuser:vanilepass@mariadb/vaniledb"
 )
 
-engine = create_engine(DATABASE_URL, echo=False)
+engine = create_engine(
+    DATABASE_URL, echo=False, pool_pre_ping=True, pool_size=20, max_overflow=0
+)
 Session = sessionmaker(engine)
 
 

@@ -10,13 +10,13 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from models.Post import Post
+from repositories import get_session
+from repositories.post_repository import PostRepository
 
-from . import post_repository
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///database.db")
+DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///database.db")
 
 jobstores = {
-    "default": SQLAlchemyJobStore(url=DATABASE_URL),
+    "default": SQLAlchemyJobStore(url=DATABASE_URI),
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
@@ -93,10 +93,12 @@ async def stop_job(user_id: int, post_id: int, hour: int, minute: int, _type: st
 
 
 async def job_func(post_id: int):
+    post_repository = PostRepository(get_session())
     await post_repository.send_post(post_id, True, create_remove_post_jod)
 
 
 async def job_func_remove(user_id: int, post_id: int, chat_id: str, message_id: int):
+    post_repository = PostRepository(get_session())
     await post_repository.remove_post(post_id, chat_id, message_id)
     remove_job_by_id(f"{user_id}_{post_id}_{chat_id}_{message_id}_remove")
 
@@ -138,6 +140,7 @@ def remove_job_by_id(job_id: str) -> bool:
 
 
 def remove_job_by_time_interval(time_frames: list[str], user_id: int):
+    post_repository = PostRepository(get_session())
     posts = post_repository.get_all_posts_by_user_id(user_id)
     for post in posts:
         for time_frame in time_frames:
@@ -166,6 +169,7 @@ def get_all_jobs_by_user_id(time_frames: list[str], user_id: int) -> list:
     """
     Get all jobs for a user by user_id.
     """
+    post_repository = PostRepository(get_session())
     posts = post_repository.get_all_posts_by_user_id(user_id)
     # user_multiposting = user_repository.get_multiposting_by_id(user_id)
     user_multiposting = None
@@ -213,6 +217,9 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
         if len(auto_repeat_dates) > 0:
             start_date = datetime.datetime.strptime(auto_repeat_dates[0], "%d/%m/%Y")
             end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
+
+    if not start_date:
+        start_date = datetime.datetime.now()
 
     index = 0
 

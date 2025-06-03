@@ -5,8 +5,6 @@ from datetime import datetime, time
 from models import get_session
 from repositories.post_repository import PostRepository
 
-post_repository = PostRepository(get_session())
-
 
 def format_date(date_str: str, _locale: str = "ru_RU.UTF-8") -> str:
     """
