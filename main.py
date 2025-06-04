@@ -10,12 +10,12 @@ load_dotenv(".env.app")
 from bot import bot, dp
 from models import create_all
 from routes import base_router, post_router, user_router
-from utils.scheduler import scheduler
+from utils.scheduler import start_scheduler
 
 
 async def main() -> None:
     create_all()
-    scheduler.start()
+    start_scheduler()
     await bot.set_my_commands(
         commands=[
             BotCommand(command="/start", description="Запутить или перезапустить бота"),

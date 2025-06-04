@@ -3,7 +3,13 @@ import os
 import re
 import zoneinfo
 
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
+from apscheduler.events import (
+  EVENT_JOB_ERROR,
+  EVENT_JOB_EXECUTED,
+  EVENT_JOB_MODIFIED,
+  EVENT_JOB_REMOVED,
+  EVENT_JOB_SUBMITTED,
+)
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -86,6 +92,7 @@ def parse_time_from_str(time_str: str) -> str:
 
 async def stop_job(user_id: int, post_id: int, hour: int, minute: int, _type: str):
     try:
+        print(f"Stopping job for post {post_id} at {hour}:{minute} with type {_type}")
         job_id = f"{user_id}_{post_id}_{hour}_{minute}_{_type}"
         remove_job_by_id(job_id)
     except:
@@ -131,7 +138,7 @@ def remove_job_by_id(job_id: str) -> bool:
     try:
         job = scheduler.get_job(job_id)
         if job:
-            print(f"Removing job {job_id}")
+            print(f"Removing job by ID {job_id}")
             scheduler.remove_job(job_id)
             return True
         else:
@@ -149,7 +156,6 @@ def remove_job_by_time_interval(time_frames: list[str], user_id: int):
         for time_frame in time_frames:
             try:
                 _type, params = parse_schedule_string(time_frame)
-                print(f"Parsed duration: {_type}, {params} minutes")
                 if _type == "interval":
                     id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval"
                     job = scheduler.get_job(id)
@@ -273,6 +279,8 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
                 if not minute:
                     minute = params.get("minutes", None)
 
+                print("Stop job", end_date)
+
                 scheduler.add_job(
                     stop_job,
                     args=[
@@ -298,10 +306,7 @@ def submited_event_listener(event):
     """
     Listener for job submission events.
     """
-    if event.exception:
-        print(f"Job {event.job_id} failed to execute: {event.exception}")
-    else:
-        print(f"Job {event.job_id} submitted successfully.")
+    print(f"Job {event.job_id} submitted successfully.", event)
 
 
 def executed_event_listener(event):
@@ -312,12 +317,22 @@ def executed_event_listener(event):
         print(f"Job {event.job_id} failed to execute: {event.exception}")
     else:
         print(f"Job {event.job_id} executed successfully.")
+    scheduler.add_listener(
+        modifyed_event_listener, EVENT_JOB_MODIFIED | EVENT_JOB_REMOVED
+    )
 
 
-async def start_scheduler():
+def modifyed_event_listener(event):
+    print(event)
+
+
+def start_scheduler():
     """
     Start the scheduler.
     """
+    scheduler.add_listener(
+        modifyed_event_listener, EVENT_JOB_MODIFIED | EVENT_JOB_REMOVED
+    )
     scheduler.add_listener(submited_event_listener, EVENT_JOB_SUBMITTED)
     scheduler.add_listener(
         executed_event_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR
