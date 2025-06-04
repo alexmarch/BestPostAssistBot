@@ -24,24 +24,8 @@ services:
       - MARIADB_DATABASE=vaniledb
       - MARIADB_USER=vanileuser
       - MARIADB_PASSWORD=vanilepass
-    ports:
-      - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: unless-stopped
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: vanileautoposter-phpmyadmin
-    environment:
-      - PMA_HOST=mariadb
-      - PMA_PORT=3306
-      - PMA_USER=vanileuser
-      - PMA_PASSWORD=vanilepass
-    ports:
-      - "8085:80"
-    depends_on:
-      - mariadb
-    restart: unless-stopped
-
 volumes:
   mariadb_data:

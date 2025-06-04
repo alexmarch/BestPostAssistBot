@@ -1,6 +1,7 @@
 import datetime
 import os
 import re
+import zoneinfo
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, EVENT_JOB_SUBMITTED
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -13,10 +14,12 @@ from models.Post import Post
 from repositories import get_session
 from repositories.post_repository import PostRepository
 
-DATABASE_URI = os.getenv("DATABASE_URL", "sqlite:///database.db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "mysql+pymysql://vanileuser:vanilepass@mariadb/vaniledb"
+)
 
 jobstores = {
-    "default": SQLAlchemyJobStore(url=DATABASE_URI),
+    "default": SQLAlchemyJobStore(url=DATABASE_URL),
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
@@ -219,7 +222,7 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
             end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
 
     if not start_date:
-        start_date = datetime.datetime.now()
+        start_date = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Kiev"))
 
     index = 0
 
@@ -240,7 +243,9 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
                         timezone="Europe/Kiev",
                         **params,
                     ),
-                    next_run_time=datetime.datetime.now(),
+                    next_run_time=datetime.datetime.now(
+                        zoneinfo.ZoneInfo("Europe/Kiev")
+                    ),
                     replace_existing=True,
                 )
             elif _type == "cron":
