@@ -304,6 +304,7 @@ class PostRepository(BaseRepository):
                         )
 
                 except Exception as e:
+                    self.session.rollback()
                     print(f"Error sending post to channel {channel.chat_id}: {e}")
                     continue
         except Exception as e:
