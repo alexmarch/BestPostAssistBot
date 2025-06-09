@@ -80,12 +80,14 @@ class UserRepository(BaseRepository):
         # Update the existing multiposting
         if existing_multiposting:
             existing_multiposting.time_frames = "|".join(timeframes)
+            existing_multiposting.active = True
             self.session.commit()
             return existing_multiposting
         # Create a new multiposting
         multiposting = Multiposting(
             user_id=user.id,
             time_frames="|".join(timeframes),
+            active=True,  # Default to active
         )
         self.session.add(multiposting)
         self.session.commit()

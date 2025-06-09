@@ -10,13 +10,13 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-    Channel,
-    MediaFile,
-    Post,
-    PostKeyboard,
-    PostReactioButton,
-    PostSchedule,
-    User,
+  Channel,
+  MediaFile,
+  Post,
+  PostKeyboard,
+  PostReactioButton,
+  PostSchedule,
+  User,
 )
 
 from .base import BaseRepository
@@ -60,6 +60,7 @@ class PostRepository(BaseRepository):
         Отправляет пост в указанный канал.
         :param post: Пост, который нужно отправить.
         """
+        post = None
         try:
 
             ikb = InlineKeyboardBuilder()
@@ -309,7 +310,6 @@ class PostRepository(BaseRepository):
             print(f"Error sending post: {e}")
 
         finally:
-            print(post)
             _channels_list = f"{html.blockquote('\n'.join([f"→ {ch.title} - {ch.type}" for ch in channels]))}\n\n"
             _creatator = f"<b>Автор:</b> {html.link(f"@{post.user.username}", f"tg://user?id={post.user.chat_id}")} | {post.user.full_name}\n"
             if post.recipient_report_chat_id:
