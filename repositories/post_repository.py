@@ -61,6 +61,7 @@ class PostRepository(BaseRepository):
         :param post: Пост, который нужно отправить.
         """
         post = None
+        channels = []
         try:
 
             ikb = InlineKeyboardBuilder()
@@ -74,8 +75,6 @@ class PostRepository(BaseRepository):
             if not post:
                 print(f"Post with ID {post_id} not found")
                 return {}
-
-            channels = []
             total_channels = len(post.channels)
             sended_channels = 0
             reactions = post.post_reaction_buttons
@@ -311,6 +310,12 @@ class PostRepository(BaseRepository):
             print(f"Error sending post: {e}")
 
         finally:
+            if not post:
+                print(f"Post with ID {post_id} not found")
+                return {}
+            if not len(channels):
+                print(f"No channels found for post ID {post_id}")
+                return {}
             _channels_list = f"{html.blockquote('\n'.join([f"→ {ch.title} - {ch.type}" for ch in channels]))}\n\n"
             _creatator = f"<b>Автор:</b> {html.link(f"@{post.user.username}", f"tg://user?id={post.user.chat_id}")} | {post.user.full_name}\n"
             if post.recipient_report_chat_id:
@@ -425,6 +430,7 @@ class PostRepository(BaseRepository):
             return post
         except Exception as e:
             print(f"Error creating post: {e}")
+            self.session.rollback()
             return False
 
     def get_post_by_forward_message(
@@ -502,6 +508,7 @@ class PostRepository(BaseRepository):
             return post
         except Exception as e:
             print(f"Error updating post: {e}")
+            self.session.rollback()
             return False
 
     def update_post_reaction_by_user_id(
@@ -547,6 +554,7 @@ class PostRepository(BaseRepository):
             self.session.commit()
             return True
         except Exception as e:
+            self.session.rollback()
             print(f"Error updating post reaction: {e}")
             return False
 
@@ -583,6 +591,7 @@ class PostRepository(BaseRepository):
             self.session.commit()
             return True
         except Exception as e:
+            self.session.rollback()
             print(f"Error archiving post: {e}")
             return False
 
@@ -601,6 +610,7 @@ class PostRepository(BaseRepository):
             self.session.commit()
             return True
         except Exception as e:
+            self.session.rollback()
             print(f"Error unarchiving post: {e}")
             return False
 
