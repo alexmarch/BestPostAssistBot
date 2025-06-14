@@ -4,11 +4,11 @@ import re
 import zoneinfo
 
 from apscheduler.events import (
-  EVENT_JOB_ERROR,
-  EVENT_JOB_EXECUTED,
-  EVENT_JOB_MODIFIED,
-  EVENT_JOB_REMOVED,
-  EVENT_JOB_SUBMITTED,
+    EVENT_JOB_ERROR,
+    EVENT_JOB_EXECUTED,
+    EVENT_JOB_MODIFIED,
+    EVENT_JOB_REMOVED,
+    EVENT_JOB_SUBMITTED,
 )
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -223,9 +223,10 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
         end_date = datetime.datetime.strptime(
             post_schedule.stop_schedule_date_frames, "%d/%m/%Y"
         )
-        if len(auto_repeat_dates) > 0:
-            start_date = datetime.datetime.strptime(auto_repeat_dates[0], "%d/%m/%Y")
-            end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
+
+    if len(auto_repeat_dates) > 0:
+        start_date = datetime.datetime.strptime(auto_repeat_dates[0], "%d/%m/%Y")
+        end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
 
     if not start_date:
         start_date = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Kiev"))
@@ -337,4 +338,5 @@ def start_scheduler():
     scheduler.add_listener(
         executed_event_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR
     )
+    scheduler.get_jobs()
     scheduler.start()
