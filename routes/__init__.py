@@ -19,7 +19,10 @@ class UserMiddleware(BaseMiddleware):
         event_user = data.get("event_from_user", None)
         user = None
         if event_user:
-            user = user_repository.find_by_chat_id(event_user.id)
+            try:
+                user = user_repository.find_by_chat_id(event_user.id)
+            except Exception as e:
+                print(f"Error finding user by chat_id: {e}")
         if user:
             data["user_id"] = user.id
         return await handler(event, data)

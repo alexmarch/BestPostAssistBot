@@ -4,11 +4,11 @@ import re
 import zoneinfo
 
 from apscheduler.events import (
-    EVENT_JOB_ERROR,
-    EVENT_JOB_EXECUTED,
-    EVENT_JOB_MODIFIED,
-    EVENT_JOB_REMOVED,
-    EVENT_JOB_SUBMITTED,
+  EVENT_JOB_ERROR,
+  EVENT_JOB_EXECUTED,
+  EVENT_JOB_MODIFIED,
+  EVENT_JOB_REMOVED,
+  EVENT_JOB_SUBMITTED,
 )
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -110,7 +110,7 @@ async def job_func(post_id: int):
 async def job_func_remove(user_id: int, post_id: int, chat_id: str, message_id: int):
     post_repository = PostRepository(get_session())
     await post_repository.remove_post(post_id, chat_id, message_id)
-    remove_job_by_id(f"{user_id}_{post_id}_{chat_id}_{message_id}_remove")
+    # remove_job_by_id(f"{user_id}_{post_id}_{chat_id}_{message_id}_remove")
 
 
 def create_remove_post_jod(
@@ -120,6 +120,7 @@ def create_remove_post_jod(
     Create a job to remove a post at a specific datetime.
     """
     print(f"Create job Removing post {post.id} in chat {chat_id} at {datetime}")
+    return  # TODO: fix remove job
     scheduler.add_job(
         job_func_remove,
         args=[post.user_id, post.id, chat_id, message_id],
@@ -279,8 +280,6 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
                 minute = params.get("minute", None)
                 if not minute:
                     minute = params.get("minutes", None)
-
-                print("Stop job", end_date)
 
                 scheduler.add_job(
                     stop_job,

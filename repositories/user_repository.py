@@ -72,7 +72,9 @@ class UserRepository(BaseRepository):
         self.session.delete(channel)
         self.session.commit()
 
-    def create_multiposting(self, user: User, timeframes: list[str]) -> Multiposting:
+    def create_multiposting(
+        self, user: User, timeframes: list[str]
+    ) -> Multiposting | None:
         # Check if the user already has a multiposting
         existing_multiposting = self.session.execute(
             select(Multiposting).where(Multiposting.user_id == user.id)
@@ -89,8 +91,13 @@ class UserRepository(BaseRepository):
             time_frames="|".join(timeframes),
             active=True,  # Default to active
         )
-        self.session.add(multiposting)
-        self.session.commit()
+        try:
+            self.session.add(multiposting)
+            self.session.commit()
+        except Exception as e:
+            print(f"Error creating multiposting: {e}")
+            self.session.rollback()
+            return None
         return multiposting
 
     def get_multiposting(self, user: User) -> Multiposting | None:

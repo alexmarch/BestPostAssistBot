@@ -6,6 +6,6 @@ from .user_repository import UserRepository
 
 session = get_session()
 
-user_repository = UserRepository(session)
-post_repository = PostRepository(session)
-scheduler_repository = ScheduleRepository(session)
+user_repository = UserRepository(get_session())
+post_repository = PostRepository(get_session())
+scheduler_repository = ScheduleRepository(get_session())

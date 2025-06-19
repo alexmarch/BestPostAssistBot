@@ -13,15 +13,20 @@ class ScheduleRepository(BaseRepository):
         return self.session.query(self.model).filter_by(post_id=post_id).first()
 
     def create_schedule(
-        self, post_id: int, schedule_time_frames: list[str], schedule_date_frames: str
-    ) -> PostSchedule:
-        schedule = self.model(
-            post_id=post_id,
-            schedule_time_frames=schedule_time_frames.join("|"),
-            schedule_date_frames=schedule_date_frames.join("|"),
-        )
-        self.session.add(schedule)
-        self.session.commit()
+        self, post_id: int, schedule_time_frames: str, schedule_date_frames: str
+    ) -> PostSchedule | None:
+        try:
+            schedule = self.model(
+                post_id=post_id,
+                schedule_time_frames=schedule_time_frames.join("|"),
+                schedule_date_frames=schedule_date_frames.join("|"),
+            )
+            self.session.add(schedule)
+            self.session.commit()
+        except Exception as e:
+            print(f"Error creating schedule: {e}")
+            self.session.rollback()
+            return None
         return schedule
 
     def update_schedule(
