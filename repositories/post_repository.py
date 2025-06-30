@@ -10,13 +10,13 @@ from sqlalchemy import select
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-  Channel,
-  MediaFile,
-  Post,
-  PostKeyboard,
-  PostReactioButton,
-  PostSchedule,
-  User,
+    Channel,
+    MediaFile,
+    Post,
+    PostKeyboard,
+    PostReactioButton,
+    PostSchedule,
+    User,
 )
 
 from .base import BaseRepository
@@ -156,6 +156,7 @@ class PostRepository(BaseRepository):
             if not len(post.channels):
                 print(f"No channels found for post ID {post_id}")
                 return
+
             sended_channels = 0
             for channel in post.channels:
                 message = None
@@ -306,6 +307,7 @@ class PostRepository(BaseRepository):
                     self.session.rollback()
                     print(f"Error sending post to channel {channel.chat_id}: {e}")
                     continue
+
         except Exception as e:
             print(f"Error sending post: {e}")
 
@@ -335,7 +337,7 @@ class PostRepository(BaseRepository):
                     )
                 except Exception as e:
                     print(f"Error sending report to user: {e}")
-
+            self.session.close()
             return {
                 "sended_channels": sended_channels,
                 "total_channels": total_channels,
@@ -431,6 +433,7 @@ class PostRepository(BaseRepository):
         except Exception as e:
             print(f"Error creating post: {e}")
             self.session.rollback()
+            self.session.close()
             return False
 
     def get_post_by_forward_message(
@@ -510,6 +513,8 @@ class PostRepository(BaseRepository):
             print(f"Error updating post: {e}")
             self.session.rollback()
             return False
+        finally:
+            self.session.close()
 
     def update_post_reaction_by_user_id(
         self, post_id: int, reaction_id: int, user_id: int
@@ -556,7 +561,10 @@ class PostRepository(BaseRepository):
         except Exception as e:
             self.session.rollback()
             print(f"Error updating post reaction: {e}")
+            self.session.close()
             return False
+        finally:
+            self.session.close()
 
     def delete_post(self, post_id: int) -> bool:
         """
@@ -575,6 +583,8 @@ class PostRepository(BaseRepository):
         except Exception as e:
             print(f"Error deleting post: {e}")
             return False
+        finally:
+            self.session.close()
 
     def archive_post(self, post_id: int) -> bool:
         """
@@ -594,6 +604,8 @@ class PostRepository(BaseRepository):
             self.session.rollback()
             print(f"Error archiving post: {e}")
             return False
+        finally:
+            self.session.close()
 
     def unarchive_post(self, post_id: int) -> bool:
         """
@@ -613,6 +625,8 @@ class PostRepository(BaseRepository):
             self.session.rollback()
             print(f"Error unarchiving post: {e}")
             return False
+        finally:
+            self.session.close()
 
     def get_all_posts_by_user_id(self, user_id: int) -> list[Post]:
         """

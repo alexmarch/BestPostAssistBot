@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.exc import PendingRollbackError
 
 from models import Channel, Multiposting, Post, User
 from utils.scheduler import remove_job_by_time_interval
@@ -18,9 +19,22 @@ class UserRepository(BaseRepository):
         return user
 
     def find_by_chat_id(self, chat_id: int) -> User | None:
-        return self.session.execute(
-            select(User).where(User.chat_id == chat_id)
-        ).scalar()
+        try:
+            return self.session.execute(
+                select(User).where(User.chat_id == chat_id)
+            ).scalar()
+        except PendingRollbackError:
+            print(
+                f"Pending rollback error for chat_id {chat_id}. Rolling back session."
+            )
+            self.session.rollback()
+            return self.session.execute(
+                select(User).where(User.chat_id == chat_id)
+            ).scalar()
+            return None
+        except Exception as e:
+            print(f"Error finding user by chat_id {chat_id}: {e}")
+            return None
 
     def find_by_username(self, username: str) -> User | None:
         return self.session.execute(

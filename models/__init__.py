@@ -2,6 +2,7 @@ import os
 
 from sqlalchemy import Column, ForeignKey, Table, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import NullPool
 
 
 class Base(DeclarativeBase):
@@ -20,8 +21,13 @@ DATABASE_URL = os.getenv(
 )
 
 engine = create_engine(
-    DATABASE_URL, echo=False, pool_pre_ping=True, pool_size=20, max_overflow=0
-)
+    DATABASE_URL,
+    echo_pool="debug",  # log pool checkouts
+    pool_size=20,  # default
+    max_overflow=10,  # allow 10 overflow connections
+    pool_timeout=30,  # wait up to 30 seconds for a connection
+)  # wait up to 30s before raising error)
+
 Session = sessionmaker(engine)
 
 
