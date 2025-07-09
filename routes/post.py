@@ -5,45 +5,44 @@ from aiogram import F, html
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, FSInputFile, Message
+from aiogram.types import CallbackQuery, Chat, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-    DialogCalendar,
-    DialogCalendarCallback,
-    SimpleCalendar,
-    SimpleCalendarCallback,
-    get_user_locale,
+  DialogCalendar,
+  DialogCalendarCallback,
+  SimpleCalendar,
+  SimpleCalendarCallback,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-    ChannelData,
-    EmojiButtonData,
-    PostButtonData,
-    get_add_media_keyboard,
-    get_back_to_post_keyboard,
-    get_channel_list_keyboard,
-    get_chat_channel_keyboard,
-    get_confirm_auto_repeat_keyboard,
-    get_confirm_calendar_keyboard,
-    get_confirm_post_keyboard,
-    get_created_post_keyboard,
-    get_next_calendar_keyboard,
-    get_next_post_time_keyboard,
-    get_post_buttons_keyboard,
-    get_post_publich_keyboard,
-    get_post_publish_settings_keyboard,
-    get_reaction_buttons_keyboard,
-    get_remove_post_interval_keyboard,
-    get_settings_post_keyboard,
+  ChannelData,
+  EmojiButtonData,
+  PostButtonData,
+  get_add_media_keyboard,
+  get_back_to_post_keyboard,
+  get_channel_list_keyboard,
+  get_chat_channel_keyboard,
+  get_confirm_auto_repeat_keyboard,
+  get_confirm_calendar_keyboard,
+  get_confirm_post_keyboard,
+  get_created_post_keyboard,
+  get_next_calendar_keyboard,
+  get_next_post_time_keyboard,
+  get_post_buttons_keyboard,
+  get_post_publich_keyboard,
+  get_post_publish_settings_keyboard,
+  get_reaction_buttons_keyboard,
+  get_remove_post_interval_keyboard,
+  get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
 from utils import format_date
 from utils.media import remove_media_file
 from utils.messages import get_confirm_auto_repeat_message
-from utils.scheduler import create_jod, create_remove_post_jod
+from utils.scheduler import create_jod, create_remove_post_jod, remove_old_jobs
 
 from . import post_router
 
@@ -73,6 +72,7 @@ async def answer_with_post(message: Message, state_data: dict[str, Any]) -> None
     media_file_path = state_data.get("media_file_path")
     media_file_name = state_data.get("media_file_name")
     media_file_type = state_data.get("media_file_type")
+
     reactions = state_data.get("reactions")
     buttons = state_data.get("buttons")
 
@@ -153,54 +153,52 @@ async def edit_post_handler(message: Message, state: FSMContext) -> None:
     """
     Обработчик изменения поста
     """
-    state_data = await state.get_data()
     await state.set_state(PostForm.edit_post)
     await message.answer(
         text="⬇️ Отправьте сюда пост, который хотите изменить",
-        reply_markup=get_back_to_post_keyboard(state_data),
     )
 
 
-@post_router.message(PostForm.edit_post)
-async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
-    state_data = await state.get_data()
-    if message.forward_from_chat and message.forward_from_message_id:
-        user = user_repository.find_by_chat_id(message.from_user.id)
-        forward_from_chat_id = message.forward_from_chat.id
-        forward_from_message_id = message.forward_from_message_id
-        post = post_repository.get_post_by_forward_message(
-            user.id, str(forward_from_chat_id), forward_from_message_id
-        )
-        if not post:
-            await message.answer(
-                text="⚠️ Пост не найден. Отправьте корректный пост.",
-                reply_markup=get_back_to_post_keyboard(state_data),
-            )
-            return
+# @post_router.message(PostForm.edit_post)
+# async def edit_post_text_handler(message: Message, state: FSMContext) -> None:
+#     state_data = await state.get_data()
+#     if message.forward_from_chat and message.forward_from_message_id:
+#         user = user_repository.find_by_chat_id(message.from_user.id)
+#         forward_from_chat_id = message.forward_from_chat.id
+#         forward_from_message_id = message.forward_from_message_id
+#         post = post_repository.get_post_by_forward_message(
+#             user.id, str(forward_from_chat_id), forward_from_message_id
+#         )
+#         if not post:
+#             await message.answer(
+#                 text="⚠️ Пост не найден. Отправьте корректный пост.",
+#                 reply_markup=get_back_to_post_keyboard(state_data),
+#             )
+#             return
 
-        await state.update_data(
-            {
-                "text": post.text,
-                "post_id": post.id,
-                "channel_id": forward_from_chat_id,
-                "sound": "on" if post.sound else "off",
-                "comments": "on" if post.comments else "off",
-                "pin": "on" if post.pin else "off",
-                "forward_from_message_id": forward_from_message_id,
-                "signature": "on" if post.signature else "off",
-                # "chat_channel_list": post.chat_channel_list,
-                "is_confirm": True,
-                "media_file_path": post.post_media_file.media_file_path,
-                "media_file_name": post.post_media_file.media_file_name,
-                "media_file_position": post.post_media_file.media_file_position,
-                "media_file_type": post.post_media_file.media_file_type,
-            }
-        )
-        state_data = await state.get_data()
-        await answer_with_post(
-            message=message,
-            state_data=state_data,
-        )
+#         await state.update_data(
+#             {
+#                 "text": post.text,
+#                 "post_id": post.id,
+#                 "channel_id": forward_from_chat_id,
+#                 "sound": "on" if post.sound else "off",
+#                 "comments": "on" if post.comments else "off",
+#                 "pin": "on" if post.pin else "off",
+#                 "forward_from_message_id": forward_from_message_id,
+#                 "signature": "on" if post.signature else "off",
+#                 # "chat_channel_list": post.chat_channel_list,
+#                 "is_confirm": True,
+#                 "media_file_path": post.post_media_file.media_file_path,
+#                 "media_file_name": post.post_media_file.media_file_name,
+#                 "media_file_position": post.post_media_file.media_file_position,
+#                 "media_file_type": post.post_media_file.media_file_type,
+#             }
+#         )
+#         state_data = await state.get_data()
+#         await answer_with_post(
+#             message=message,
+#             state_data=state_data,
+#         )
 
 
 @post_router.message(Command("create_post"))
@@ -237,6 +235,7 @@ async def create_post_text_handler(message: Message, state: FSMContext) -> None:
     multiposting = user_repository.get_multiposting_by_user_id(user.id)
     time_frames = None
     time_frames_active = "on"
+
     if multiposting:
         time_frames = multiposting.time_frames.split("|")
         time_frames_active = "on" if multiposting.active else "off"
@@ -647,35 +646,29 @@ async def set_post_settings_action_handler(
 
     if callback_data.action == "confirm_create_post":
         state_data = await state.get_data()
-        post = post_repository.create_post(user, state_data)
 
-        if post:
-            time_frames = state_data.get("time_frames")
-            time_frames_active = state_data.get("time_frames_active")
-            date_frames_confirm = state_data.get("date_frames_confirm")
-            stop_schedule_date_frames = state_data.get("stop_schedule_date_frames")
-            auto_repeat_dates = state_data.get("auto_repeat_dates", None)
+        time_frames = state_data.get("time_frames")
+        time_frames_active = state_data.get("time_frames_active")
+        auto_repeat_dates = state_data.get("auto_repeat_dates", None)
 
+        if not state_data.get("post_id"):
+            post = post_repository.create_post(user, state_data)
             if not time_frames or time_frames_active == "off":
                 await post_repository.send_post(post.id, True, create_remove_post_jod)
             else:
-                # create job schedule with time_frames for sending post
                 create_jod(post, time_frames, auto_repeat_dates)
-
-                # multiposting = BlockQuote("\n".join(time_frames)).as_html()
-
-                # if date_frames_confirm:
-
-                #     multiposting = f"<b>📅 Дата публикации:</b>\n{BlockQuote(date_frames_confirm + '-' + stop_schedule_date_frames).as_html()}\n\n<b>🕒 Интервал:</b>\n{multiposting}\n"
-
-                # await query.message.answer(
-                #     text=f"✅ <b>Публикация завершена.</b>\n\n{multiposting}\n\n🔔 <b>ВНИМАНИЕ!</b> Вы получите уведомление о публикации поста.\n\n",
-                #     reply_markup=get_back_to_post_keyboard(state_data),
-                # )
-                # send message Отправка...
                 await query.message.edit_text(
                     "📤 ⏳ Отправка поста...", inline_message_id=query.inline_message_id
                 )
+        else:
+            post = post_repository.get_by_id(state_data.get("post_id"))
+            post_time_frames = post.time_frames
+            post_auto_repeat_dates = post.auto_repeat_dates
+            updated_post = post_repository.update_post(user, state_data.get("post_id"), state_data)
+            if updated_post:
+              post = post_repository.get_by_id(state_data.get("post_id"))
+              remove_old_jobs(post, post_time_frames, post_auto_repeat_dates)
+              create_jod(post, time_frames, auto_repeat_dates)
 
     if callback_data.action == "active_multiposting_timeframe":
         multiposting = user_repository.get_multiposting_by_user_id(user.id)
@@ -706,7 +699,7 @@ async def set_post_settings_action_handler(
         state_data = await state.get_data()
 
         if state_data.get("media_file_path"):
-            remove_media_file(state_data.get("media_file_path"))
+            # remove_media_file(state_data.get("media_file_path"))
             await state.update_data(
                 {
                     "media_file_path": None,
@@ -1078,7 +1071,6 @@ async def emoji_button_handler(
             query.from_user.id,
         )
         post = post_repository.get_by_id(callback_data.post_id)
-        print(post)
         await query.message.edit_reply_markup(
             inline_message_id=query.inline_message_id,
             reply_markup=get_created_post_keyboard(post),
@@ -1086,3 +1078,91 @@ async def emoji_button_handler(
     except Exception as e:
         print(e)
         return
+
+
+@post_router.message(F.forward_from_chat[F.type == "channel"].as_("channel"))
+async def forwarded_from_channel(message: Message, channel: Chat, state: FSMContext):
+    user = user_repository.find_by_chat_id(message.from_user.id)
+    if not user:
+        await message.answer(
+            text="⚠️ Вы не зарегистрированы в боте. Пожалуйста, начните с команды /start.",
+            reply_markup=get_back_to_post_keyboard(await state.get_data()),
+        )
+        return
+    c_state = await state.get_state()
+    if c_state == PostForm.edit_post:
+        try:
+            post = post_repository.get_post_by_chat_id_and_message_id(
+                str(channel.id), int(message.forward_from_message_id)
+            )
+            # load post to state
+            if post:
+                if post.user_id != user.id:
+                    await message.answer(
+                        text="⚠️ Вы не можете редактировать посты других пользователей.",
+                        reply_markup=get_back_to_post_keyboard(await state.get_data()),
+                    )
+                    return
+                await state.update_data(
+                    {
+                        "post_id": post.id,
+                        "text": post.text,
+                        "sound": "on" if post.sound else "off",
+                        "comments": "on" if post.comments else "off",
+                        "pin": "on" if post.pin else "off",
+                        "signature": "on" if post.signature else "off",
+                        "is_confirm": True,
+                    }
+                )
+                if post.post_media_file:
+                    await state.update_data(
+                        {
+                            "media_file_path": post.post_media_file.media_file_path,
+                            "media_file_name": post.post_media_file.media_file_name,
+                            "media_file_position": post.post_media_file.media_file_position,
+                            "media_file_type": post.post_media_file.media_file_type,
+                        }
+                    )
+                # set time_frames and auto_repeat_dates
+                if post.time_frames:
+                    await state.update_data(
+                        {
+                            "time_frames": post.time_frames,
+                            "time_frames_active": "on",
+                        }
+                    )
+                if post.auto_repeat_dates:
+                    await state.update_data(
+                        {
+                            "auto_repeat_dates": post.auto_repeat_dates,
+                        }
+                    )
+
+                chat_channel = [
+                    {
+                        "id": channel.id,
+                        "title": channel.title,
+                        "chat_id": channel.chat_id,
+                        "checked": "on",
+                    }
+                    for channel in post.channels
+                ]
+
+                # print(post.channels)
+
+                await state.update_data(
+                    {
+                        "chat_channel_list": chat_channel,
+                    }
+                )
+
+                await state.set_state(PostForm.is_confirm)
+                await answer_with_post(
+                    message=message, state_data=await state.get_data()
+                )
+        except Exception as e:
+            print(f"Error while processing forwarded message: {e}")
+            await message.answer(
+                text="⚠️ Ошибка при обработке пересланного сообщения. Попробуйте еще раз.",
+                reply_markup=get_back_to_post_keyboard(await state.get_data()),
+            )

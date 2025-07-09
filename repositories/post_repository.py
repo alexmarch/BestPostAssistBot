@@ -5,18 +5,18 @@ from typing import Any, Callable
 from aiogram import html
 from aiogram.types import FSInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from sqlalchemy import select
+from sqlalchemy import String, cast, select
 
 from bot import bot
 from keyboard.keyboard import EmojiButtonData
 from models import (
-    Channel,
-    MediaFile,
-    Post,
-    PostKeyboard,
-    PostReactioButton,
-    PostSchedule,
-    User,
+  Channel,
+  MediaFile,
+  Post,
+  PostKeyboard,
+  PostReactioButton,
+  PostSchedule,
+  User,
 )
 
 from .base import BaseRepository
@@ -347,6 +347,118 @@ class PostRepository(BaseRepository):
                 "user": post.user,
             }
 
+    def update_post(
+        self, user: User, post_id: int, post_form: dict[str, Any]
+    ) -> Post | bool:
+        """
+        Обновляет пост по его ID.
+        :param user: Пользователь, которому принадлежит пост.
+        :param post_form: Данные поста.
+        """
+        try:
+            post = self.get_by_id(post_id)
+            if not post:
+                print(f"Post with ID {post_id} not found")
+                return False
+
+            post.text = post_form.get("text")
+            post.sound = True if post_form.get("sound") == "on" else False
+            post.comments = True if post_form.get("comments") == "on" else False
+            post.pin = True if post_form.get("pin") == "on" else False
+            post.signature = True if post_form.get("signature") == "on" else False
+            post.recipient_report_chat_id = post_form.get("recipient_report_chat_id")
+            post.time_frames = post_form.get("time_frames", [])
+            post.auto_repeat_dates = post_form.get("auto_repeat_dates", [])
+
+            date_frames_confirm = post_form.get("date_frames_confirm", None)
+
+            reactions = post_form.get("reactions")
+            buttons = post_form.get("buttons")
+
+            if date_frames_confirm:
+                post_schedule = PostSchedule(
+                    schedule_date_frames=post_form.get("date_frames"),
+                    stop_schedule_date_frames=post_form.get(
+                        "stop_schedule_date_frames"
+                    ),
+                    is_active=True,
+                    post=post,
+                )
+                self.session.add(post_schedule)
+                post.post_schedule = post_schedule
+
+            chat_channel_list = post_form.get("chat_channel_list")
+            if chat_channel_list:
+                for chat_channel in chat_channel_list:
+                    channel = self.session.execute(
+                        select(Channel).where(Channel.id == chat_channel["id"])
+                    ).scalar()
+                    if channel:
+                        post.channels.append(channel)
+
+            if post_form["media_file_name"]:
+                # If post already has a media file, update it instead of creating a new one
+                if post.post_media_file:
+                    post.post_media_file.media_file_path = post_form.get(
+                        "media_file_path"
+                    )
+                    post.post_media_file.media_file_name = post_form.get(
+                        "media_file_name"
+                    )
+                    post.post_media_file.media_file_type = post_form.get(
+                        "media_file_type"
+                    )
+                    post.post_media_file.media_file_position = post_form.get(
+                        "media_file_position"
+                    )
+                else:
+                    media_file = MediaFile(
+                        media_file_path=post_form.get("media_file_path"),
+                        media_file_name=post_form.get("media_file_name"),
+                        media_file_type=post_form.get("media_file_type"),
+                        media_file_position=post_form.get("media_file_position"),
+                        post=post,
+                    )
+                    self.session.add(media_file)
+                    post.post_media_file = media_file
+            else:
+                # If media file is not provided, remove existing media file
+                if post.post_media_file:
+                    self.session.delete(post.post_media_file)
+                    post.post_media_file = None
+
+            if reactions:
+                for reaction in reactions:
+                    post_reaction = PostReactioButton(
+                        text=reaction,
+                        post=post,
+                    )
+                    self.session.add(post_reaction)
+                    post.post_reaction_buttons.append(post_reaction)
+
+            if buttons:
+                for button in buttons:
+                    post_keyboard = PostKeyboard(
+                        button_text=button["name"],
+                        button_url=button["url"],
+                        button_column=button["row"],
+                        button_row=button["column"],
+                        post=post,
+                    )
+                    self.session.add(post_keyboard)
+                    post.post_keyboards.append(post_keyboard)
+
+            self.session.add(post)
+            self.session.flush()  # Ensure post is bound and has an ID before using it for relationships
+            self.session.commit()
+            return post
+        except Exception as e:
+            print(f"Error updating post: {e}")
+            self.session.rollback()
+            return False
+        finally:
+            self.session.close()
+
     def create_post(self, user: User, post_form: dict[str, Any]) -> Post | None:
         """
         Создает новый пост и связывает его с пользователем.
@@ -369,6 +481,8 @@ class PostRepository(BaseRepository):
                 recipient_report_chat_id=post_form.get("recipient_report_chat_id"),
                 recipient_post_chat_id=post_form.get("recipient_post_chat_id"),
                 auto_remove_datetime=post_form.get("auto_remove_datetime"),
+                time_frames=post_form.get("time_frames", []),
+                auto_repeat_dates=post_form.get("auto_repeat_dates", []),
             )
 
             self.session.add(post)
@@ -398,8 +512,8 @@ class PostRepository(BaseRepository):
                     post_keyboard = PostKeyboard(
                         button_text=button["name"],
                         button_url=button["url"],
-                        button_column=button["column"],
-                        button_row=button["row"],
+                        button_column=button["row"],
+                        button_row=button["column"],
                         post=post,
                     )
                     self.session.add(post_keyboard)
@@ -425,6 +539,7 @@ class PostRepository(BaseRepository):
                 )
                 self.session.add(post_media_file)
                 post.post_media_file = post_media_file
+
             self.session.commit()
             self.session.refresh(post)
             post = self.get_by_id(post.id)  # Refresh the post object
@@ -467,54 +582,54 @@ class PostRepository(BaseRepository):
 
         return None
 
-    def update_post(self, post_id: int, post_form: dict[str, Any]) -> Post | bool:
-        """
-        Обновляет пост по его ID.
-        :param post_id: ID поста.
-        :param post_form: Данные поста.
-        """
-        try:
-            post = self.get_by_id(post_id)
-            if not post:
-                print(f"Post with ID {post_id} not found")
-                return False
+    # def update_post(self, post_id: int, post_form: dict[str, Any]) -> Post | bool:
+    #     """
+    #     Обновляет пост по его ID.
+    #     :param post_id: ID поста.
+    #     :param post_form: Данные поста.
+    #     """
+    #     try:
+    #         post = self.get_by_id(post_id)
+    #         if not post:
+    #             print(f"Post with ID {post_id} not found")
+    #             return False
 
-            post.text = post_form.get("text")
-            post.sound = True if post_form.get("sound") == "on" else False
-            post.comments = True if post_form.get("comments") == "on" else False
-            post.pin = True if post_form.get("pin") == "on" else False
-            post.signature = True if post_form.get("signature") == "on" else False
-            post.recipient_report_chat_id = post_form.get("recipient_report_chat_id")
+    #         post.text = post_form.get("text")
+    #         post.sound = True if post_form.get("sound") == "on" else False
+    #         post.comments = True if post_form.get("comments") == "on" else False
+    #         post.pin = True if post_form.get("pin") == "on" else False
+    #         post.signature = True if post_form.get("signature") == "on" else False
+    #         post.recipient_report_chat_id = post_form.get("recipient_report_chat_id")
 
-            chat_channel_list = post_form.get("chat_channel_list")
-            if chat_channel_list:
-                for chat_channel in chat_channel_list:
-                    channel = self.session.execute(
-                        select(Channel).where(Channel.id == chat_channel["id"])
-                    ).scalar()
-                    if channel:
-                        post.channels.append(channel)
+    #         chat_channel_list = post_form.get("chat_channel_list")
+    #         if chat_channel_list:
+    #             for chat_channel in chat_channel_list:
+    #                 channel = self.session.execute(
+    #                     select(Channel).where(Channel.id == chat_channel["id"])
+    #                 ).scalar()
+    #                 if channel:
+    #                     post.channels.append(channel)
 
-            if post_form["media_file_name"]:
-                # Создаем новый объект MediaFile
-                media_file = MediaFile(
-                    media_file_path=post_form.get("media_file_path"),
-                    media_file_name=post_form.get("media_file_name"),
-                    media_file_type=post_form.get("media_file_type"),
-                    media_file_position=post_form.get("media_file_position"),
-                    post=post,
-                )
-                self.session.add(media_file)
-                post.post_media_file = media_file
+    #         if post_form["media_file_name"]:
+    #             # Создаем новый объект MediaFile
+    #             media_file = MediaFile(
+    #                 media_file_path=post_form.get("media_file_path"),
+    #                 media_file_name=post_form.get("media_file_name"),
+    #                 media_file_type=post_form.get("media_file_type"),
+    #                 media_file_position=post_form.get("media_file_position"),
+    #                 post=post,
+    #             )
+    #             self.session.add(media_file)
+    #             post.post_media_file = media_file
 
-            self.session.commit()
-            return post
-        except Exception as e:
-            print(f"Error updating post: {e}")
-            self.session.rollback()
-            return False
-        finally:
-            self.session.close()
+    #         self.session.commit()
+    #         return post
+    #     except Exception as e:
+    #         print(f"Error updating post: {e}")
+    #         self.session.rollback()
+    #         return False
+    #     finally:
+    #         self.session.close()
 
     def update_post_reaction_by_user_id(
         self, post_id: int, reaction_id: int, user_id: int
@@ -647,3 +762,25 @@ class PostRepository(BaseRepository):
         :return: Список всех постов.
         """
         return self.session.query(Post).order_by(Post.created_at.desc()).all()
+
+    def get_post_by_chat_id_and_message_id(
+        self, chat_id: str, message_id: int
+    ) -> Post | None:
+        """
+        Возвращает пост по ID чата и ID сообщения.
+        :param chat_id: ID чата.
+        :param message_id: ID сообщения.
+        :return: Пост или None, если пост не найден.
+        """
+        # For ARRAY of JSON, .any_ expects a single dict; for ARRAY of scalar, a value; for JSONB, use .contains or .has
+        # If messages_ids is a JSON/ARRAY of dicts, use .any_({'chat_id': chat_id, 'message_id': message_id})
+        # If this fails, fallback to manual filter
+        return (
+            self.session.query(Post)
+            .where(
+                cast(Post.messages_ids, String).contains(
+                    f'{{"chat_id": "{chat_id}", "message_id": {message_id}}}'
+                )
+            )
+            .first()
+        )

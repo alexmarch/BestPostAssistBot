@@ -213,10 +213,35 @@ def get_all_jobs_by_user_id(time_frames: list[str], user_id: int) -> list:
     return jobs, stop_jobs
 
 
+def remove_old_jobs(
+    post: Post, time_frames: list[str], auto_repeat_dates: list[str] = []
+):
+    """
+    Remove old jobs for a post based on its time frames and auto repeat dates.
+    """
+    if not post:
+        return
+
+    for time_frame in time_frames:
+        try:
+            _type, params = parse_schedule_string(time_frame)
+            if _type == "interval":
+                job_id = f"{post.user_id}_{post.id}_{params['hours']}_{params['minutes']}_interval"
+                remove_job_by_id(job_id)
+            elif _type == "cron":
+                job_id = (
+                    f"{post.user_id}_{post.id}_{params['hour']}_{params['minute']}_cron"
+                )
+                remove_job_by_id(job_id)
+        except ValueError as e:
+            print(f"Error parsing time frame '{time_frame}': {e}")
+
+
 def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] = []):
     post_schedule = post.post_schedule
     start_date = None
     end_date, start_date = None, None
+
     if post_schedule and post_schedule.is_active:
         start_date = datetime.datetime.strptime(
             post_schedule.schedule_date_frames, "%d/%m/%Y"

@@ -23,7 +23,7 @@ DATABASE_URL = os.getenv(
 engine = create_engine(
     DATABASE_URL,
     echo_pool="debug",  # log pool checkouts
-    pool_size=20,  # default
+    pool_size=40,  # default
     max_overflow=10,  # allow 10 overflow connections
     pool_timeout=30,  # wait up to 30 seconds for a connection
 )  # wait up to 30s before raising error)
