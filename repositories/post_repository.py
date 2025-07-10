@@ -396,7 +396,7 @@ class PostRepository(BaseRepository):
                     if channel:
                         post.channels.append(channel)
 
-            if post_form["media_file_name"]:
+            if post_form.get("media_file_name", None):
                 # If post already has a media file, update it instead of creating a new one
                 if post.post_media_file:
                     post.post_media_file.media_file_path = post_form.get(

@@ -222,6 +222,9 @@ def remove_old_jobs(
     if not post:
         return
 
+    if not time_frames or len(time_frames) == 0:
+        return
+
     for time_frame in time_frames:
         try:
             _type, params = parse_schedule_string(time_frame)
@@ -250,7 +253,7 @@ def create_jod(post: Post, time_frames: list[str], auto_repeat_dates: list[str] 
             post_schedule.stop_schedule_date_frames, "%d/%m/%Y"
         )
 
-    if len(auto_repeat_dates) > 0:
+    if auto_repeat_dates and len(auto_repeat_dates) > 0:
         start_date = datetime.datetime.strptime(auto_repeat_dates[0], "%d/%m/%Y")
         end_date = datetime.datetime.strptime(auto_repeat_dates[-1], "%d/%m/%Y")
 

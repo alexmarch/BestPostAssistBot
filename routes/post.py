@@ -9,33 +9,33 @@ from aiogram.types import CallbackQuery, Chat, FSInputFile, Message
 from aiogram.utils.formatting import BlockQuote, as_list, as_marked_section
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_calendar import (
-  DialogCalendar,
-  DialogCalendarCallback,
-  SimpleCalendar,
-  SimpleCalendarCallback,
+    DialogCalendar,
+    DialogCalendarCallback,
+    SimpleCalendar,
+    SimpleCalendarCallback,
 )
 
 from bot import bot, message_ids_list
 from keyboard.keyboard import (
-  ChannelData,
-  EmojiButtonData,
-  PostButtonData,
-  get_add_media_keyboard,
-  get_back_to_post_keyboard,
-  get_channel_list_keyboard,
-  get_chat_channel_keyboard,
-  get_confirm_auto_repeat_keyboard,
-  get_confirm_calendar_keyboard,
-  get_confirm_post_keyboard,
-  get_created_post_keyboard,
-  get_next_calendar_keyboard,
-  get_next_post_time_keyboard,
-  get_post_buttons_keyboard,
-  get_post_publich_keyboard,
-  get_post_publish_settings_keyboard,
-  get_reaction_buttons_keyboard,
-  get_remove_post_interval_keyboard,
-  get_settings_post_keyboard,
+    ChannelData,
+    EmojiButtonData,
+    PostButtonData,
+    get_add_media_keyboard,
+    get_back_to_post_keyboard,
+    get_channel_list_keyboard,
+    get_chat_channel_keyboard,
+    get_confirm_auto_repeat_keyboard,
+    get_confirm_calendar_keyboard,
+    get_confirm_post_keyboard,
+    get_created_post_keyboard,
+    get_next_calendar_keyboard,
+    get_next_post_time_keyboard,
+    get_post_buttons_keyboard,
+    get_post_publich_keyboard,
+    get_post_publish_settings_keyboard,
+    get_reaction_buttons_keyboard,
+    get_remove_post_interval_keyboard,
+    get_settings_post_keyboard,
 )
 from repositories import post_repository, user_repository
 from states.post import PostForm
@@ -664,11 +664,13 @@ async def set_post_settings_action_handler(
             post = post_repository.get_by_id(state_data.get("post_id"))
             post_time_frames = post.time_frames
             post_auto_repeat_dates = post.auto_repeat_dates
-            updated_post = post_repository.update_post(user, state_data.get("post_id"), state_data)
+            updated_post = post_repository.update_post(
+                user, state_data.get("post_id"), state_data
+            )
             if updated_post:
-              post = post_repository.get_by_id(state_data.get("post_id"))
-              remove_old_jobs(post, post_time_frames, post_auto_repeat_dates)
-              create_jod(post, time_frames, auto_repeat_dates)
+                post = post_repository.get_by_id(state_data.get("post_id"))
+                remove_old_jobs(post, post_time_frames, post_auto_repeat_dates)
+                create_jod(post, time_frames, auto_repeat_dates)
 
     if callback_data.action == "active_multiposting_timeframe":
         multiposting = user_repository.get_multiposting_by_user_id(user.id)
@@ -1095,6 +1097,7 @@ async def forwarded_from_channel(message: Message, channel: Chat, state: FSMCont
             post = post_repository.get_post_by_chat_id_and_message_id(
                 str(channel.id), int(message.forward_from_message_id)
             )
+            channels = user_repository.get_all_user_channels(user)
             # load post to state
             if post:
                 if post.user_id != user.id:
@@ -1147,6 +1150,17 @@ async def forwarded_from_channel(message: Message, channel: Chat, state: FSMCont
                     }
                     for channel in post.channels
                 ]
+
+                for channel in channels:
+                    if channel.chat_id not in [c["chat_id"] for c in chat_channel]:
+                        chat_channel.append(
+                            {
+                                "id": channel.id,
+                                "title": channel.title,
+                                "chat_id": channel.chat_id,
+                                "checked": "off",
+                            }
+                        )
 
                 # print(post.channels)
 
